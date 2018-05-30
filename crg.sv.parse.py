@@ -6,8 +6,7 @@ import re
 
 vcf = sys.argv[1]
 
-colnames = ['CHR','POS','GT','SVTYPE','SVLEN','END','SOURCES','NUM_SVTOOLS','ANN']
-#add genes - parse ANN
+colnames = ['CHR','POS','GT','SVTYPE','SVLEN','END','SOURCES','NUM_SVTOOLS','GENES','ANN']
 
 print ','.join(colnames)
 
@@ -31,10 +30,18 @@ with open(vcf) as f_vcf:
 	    info_fields = info_string.split(';')
 	    info_dict = {}
 	    info_dict['ANN']='NA'
+	    genes = []
 	    for info_value in info_fields:
 		pair = info_value.split('=')
 		if (len(pair) == 2):
 			info_dict[pair[0]] = pair[1]
+			if (pair[0] == 'ANN'):
+			    ann_buf = pair[1].split(',')
+			    for ann in ann_buf:
+				ann_buf1 = ann.split('|')
+				genes.append(ann_buf1[3])
+	    info_dict['GENES'] = ';'.join(set(genes))
+				
 	
 	    for field in colnames[3:]:
 		values.append(info_dict[field])
