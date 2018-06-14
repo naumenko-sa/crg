@@ -7,16 +7,18 @@ import re
 vcf = sys.argv[1]
 
 dgv_dict = {}
-if len(sys.argv) >1:
+if(len(sys.argv) > 2):
     dgv_report = sys.argv[2]
     with open(dgv_report) as f_dgv_report:
 	for line in f_dgv_report:
-	if not line.startswith("SAMPLE_ID"):
-	    but = line.strip()
-	    fields = buf.split()
-	    dgv_dict{fields[1]+'-'+fields[2]+'-'+fields[3]} = fields[47]
+	    if not line.startswith("SAMPLE_ID"):
+		buf = line.strip()
+		fields = buf.split('\t')
+		key = fields[1]+'-'+fields[2]+'-'+fields[3]
+		dgv_dict[key] = fields[47]
+		#print(key+'\t'+dgv_dict[key])
 
-colnames = ['CHR','POS','GT','SVTYPE','SVLEN','END','SOURCES','NUM_SVTOOLS','GENES','ANN',"DGV"]
+colnames = ['CHR','POS','GT','SVTYPE','SVLEN','END','SOURCES','NUM_SVTOOLS','GENES','ANN','DGV']
 
 print ','.join(colnames)
 
@@ -40,6 +42,7 @@ with open(vcf) as f_vcf:
 	    info_fields = info_string.split(';')
 	    info_dict = {}
 	    info_dict['ANN']='NA'
+
 	    genes = []
 	    for info_value in info_fields:
 		pair = info_value.split('=')
@@ -52,9 +55,20 @@ with open(vcf) as f_vcf:
 				genes.append(ann_buf1[3])
 	    info_dict['GENES'] = ';'.join(set(genes))
 				
-	
-	    for field in colnames[3:]:
+	    for field in colnames[3:10]:
 		values.append(info_dict[field])
+
+	    key = values[0]+'-'+values[1]+'-'+info_dict['END']
+	    #print(key+"\t"+dgv_dict[key])
+	    if key in info_dict:
+		info_dict['DGV'] = dgv_dict[key]
+	    else:
+		info_dict['DGV'] = '0'
+	    
+	    if len(sys.argv) > 2:
+		values.append(info_dict['DGV'])
+	    else:
+		values.append('NA')
 
 	    print '"'+'","'.join(values)+'"'
 
