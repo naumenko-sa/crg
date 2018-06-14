@@ -13,6 +13,6 @@ sample=`bcftools query -l ${1}-metasv.vcf.gz`
 bcftools view -f .,PASS -o $sample.pass.vcf.gz -Oz ${1}-metasv.vcf.gz
 tabix $sample.pass.vcf.gz
 
-bedtools intersect -a $sample.pass.vcf.gz -b $2 -header > $sample.pass.region.vcf
+bedtools intersect -a $sample.pass.vcf.gz -b $2 -header -u > $sample.pass.region.vcf
 
 crg.sv.parse.py $sample.pass.region.vcf $3 > $sample.sv.csv
