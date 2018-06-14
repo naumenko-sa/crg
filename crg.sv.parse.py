@@ -6,7 +6,17 @@ import re
 
 vcf = sys.argv[1]
 
-colnames = ['CHR','POS','GT','SVTYPE','SVLEN','END','SOURCES','NUM_SVTOOLS','GENES','ANN']
+dgv_dict = {}
+if len(sys.argv) >1:
+    dgv_report = sys.argv[2]
+    with open(dgv_report) as f_dgv_report:
+	for line in f_dgv_report:
+	if not line.startswith("SAMPLE_ID"):
+	    but = line.strip()
+	    fields = buf.split()
+	    dgv_dict{fields[1]+'-'+fields[2]+'-'+fields[3]} = fields[47]
+
+colnames = ['CHR','POS','GT','SVTYPE','SVLEN','END','SOURCES','NUM_SVTOOLS','GENES','ANN',"DGV"]
 
 print ','.join(colnames)
 
@@ -49,3 +59,4 @@ with open(vcf) as f_vcf:
 	    print '"'+'","'.join(values)+'"'
 
 f_vcf.close()
+

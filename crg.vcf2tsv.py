@@ -1,12 +1,13 @@
 #!/bin/env python2
 
-#converts vcf to tsv to send to TCAG for frequency annoation
-#Sample ID
-#Chromosome
-#Start
-#End
-#SV type
-#(additional columns..)
+#converts vcf to tsv to send to TCAG for frequency annotation
+# TCAG wants:
+# Sample ID
+# Chromosome
+# Start
+# End
+# SV type  (they work only with deletion and insertions)
+# (additional columns..)
 
 import csv
 import sys
