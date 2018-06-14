@@ -60,7 +60,7 @@ with open(vcf) as f_vcf:
 
 	    key = values[0]+'-'+values[1]+'-'+info_dict['END']
 	    #print(key+"\t"+dgv_dict[key])
-	    if key in info_dict:
+	    if key in dgv_dict:
 		info_dict['DGV'] = dgv_dict[key]
 	    else:
 		info_dict['DGV'] = '0'
