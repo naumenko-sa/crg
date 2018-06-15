@@ -18,7 +18,7 @@ if(len(sys.argv) > 2):
 		dgv_dict[key] = fields[47]
 		#print(key+'\t'+dgv_dict[key])
 
-colnames = ['CHR','POS','GT','SVTYPE','SVLEN','END','SOURCES','NUM_SVTOOLS','GENES','ANN','DGV']
+colnames = ['CHR','POS','GT','SVTYPE','SVLEN','END','SOURCES','NUM_SVTOOLS','GENES','ANN','SVSCOREMAX','SVSCORESUM','SVSCORETOP5','SVSCORETOP10','SVSCOREMEAN','DGV']
 
 print ','.join(colnames)
 
@@ -55,7 +55,7 @@ with open(vcf) as f_vcf:
 				genes.append(ann_buf1[3])
 	    info_dict['GENES'] = ';'.join(set(genes))
 				
-	    for field in colnames[3:10]:
+	    for field in colnames[3:15]:
 		values.append(info_dict[field])
 
 	    key = values[0]+'-'+values[1]+'-'+info_dict['END']
