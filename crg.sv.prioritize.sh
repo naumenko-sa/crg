@@ -5,20 +5,35 @@
 #PBS -d .
 #PBS -l vmem=21g,mem=21g
 
-###########################################################################################
+##################################################################################################
 #   parameters:
 #   $1 = case = project = family
-#   $2 = panel.bed - bed file with gene coordinates, created with ~/bioscripts/genes.R
-#   $3 = tcag.tsv - report from TCAG which contains SV frequency in DGV_N_subjects columns
-###########################################################################################
+#   $2 = panel = panel.bed - bed file with gene coordinates, created with ~/bioscripts/genes.R
+#   $3 = dgv = tcag.tsv - report from TCAG which contains SV frequency in DGV_N_subjects columns
+##################################################################################################
+
+if [ -z $case ]
+then
+    case=$1
+fi
+
+if [ -z $panel ]
+then
+    panel=$2
+fi
+
+if [ -z $dgv ]
+then
+    dgv=$3
+fi
 
 #get only PASS calls
-sample=`bcftools query -l ${1}-metasv.vcf.gz`
+sample=`bcftools query -l ${case}-metasv.vcf.gz`
 
-bcftools view -f .,PASS -o $sample.pass.vcf.gz -Oz ${1}-metasv.vcf.gz
+bcftools view -f .,PASS -o $sample.pass.vcf.gz -Oz ${case}-metasv.vcf.gz
 tabix $sample.pass.vcf.gz
 
-bedtools intersect -a $sample.pass.vcf.gz -b $2 -header -u > $sample.pass.region.vcf
+bedtools intersect -a $sample.pass.vcf.gz -b $panel -header -u > $sample.pass.region.vcf
 
 #svscore
 
@@ -36,4 +51,5 @@ then
 			 -i $sample.pass.region.vcf > $sample.pass.region.svscore.vcf
 fi
 
-crg.sv.parse.py $sample.pass.region.svscore.vcf $3 > $sample.sv.csv
+crg.sv.parse.py $sample.pass.region.svscore.vcf $dgv > $sample.sv.csv
+
