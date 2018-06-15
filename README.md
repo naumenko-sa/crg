@@ -13,9 +13,9 @@ clinical reseach genome scripts
 - GENES: genes overlapping the event (mostly one gene)
 - ANN: raw annotation from VEP
 - SVscores: [SVscore-github](https://github.com/lganel/SVScore),[SVscore-article](https://academic.oup.com/bioinformatics/article/33/7/1083/2748212)
-..* SVSCOREMAX
-..* SVSCORESUM
-..* SVSCORETOP5
-..* SVSCORETOP10
-..* SVSCOREMEAN
+  - SVSCOREMAX
+  - SVSCORESUM
+  - SVSCORETOP5
+  - SVSCORETOP10
+  - SVSCOREMEAN
 - DGV
