@@ -28,6 +28,6 @@ with open(original_report,'rb') as f_original_report:
 	    start = record[1]
 	    for interval in bed:
 		if ((interval[0] == chrom) and (start>=interval[1]) and (start<=interval[2])):
-		    print ','.join(record)
+		    print '"'+'","'.join(record)+'"'
 
 f_original_report.close()
