@@ -19,3 +19,4 @@ clinical reseach genome scripts
   - SVSCORETOP10
   - SVSCOREMEAN
 - DGV: frequency in DGV, 8000 WGS
+

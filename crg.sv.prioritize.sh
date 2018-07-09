@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #PBS -l walltime=10:00:00,nodes=1:ppn=1
 #PBS -joe .
 #PBS -d .
@@ -35,11 +34,13 @@ tabix $sample.pass.vcf.gz
 
 bedtools intersect -a $sample.pass.vcf.gz -b $panel -header -u > $sample.pass.region.vcf
 
-#svscore
+#generating input file for TCAG annotation
+crg.vcf2tsv.py $sample.pass.region.vcf > $sample.tsv
 
+#svscore
 if [ ! -f $sample.pass.region.svscore.vcf ]
 then
-
+    echo "Generating SV scores: " `echo date`
     SVSCORE_DATA=/hpf/largeprojects/ccmbio/arun/Tools/SVScore
     SVSCORE_SCRIPT=/hpf/largeprojects/ccmbio/naumenko/tools/svscore
     module load perl/5.20.1
@@ -51,5 +52,9 @@ then
 			 -i $sample.pass.region.vcf > $sample.pass.region.svscore.vcf
 fi
 
-crg.sv.parse.py $sample.pass.region.svscore.vcf $dgv > $sample.sv.csv
+if [ -n "$dgv" ]
+then
+    echo "Generating final report: " `echo date`
+    crg.sv.parse.py $sample.pass.region.svscore.vcf $dgv > $sample.sv.csv
+fi
 
