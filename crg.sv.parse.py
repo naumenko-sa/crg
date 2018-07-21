@@ -56,7 +56,10 @@ with open(vcf) as f_vcf:
 	    info_dict['GENES'] = ';'.join(set(genes))
 				
 	    for field in colnames[3:15]:
-		values.append(info_dict[field])
+		if field in info_dict:
+		    values.append(info_dict[field])
+		else:
+		    values.append('NA')
 
 	    key = values[0]+'-'+values[1]+'-'+info_dict['END']
 	    #print(key+"\t"+dgv_dict[key])

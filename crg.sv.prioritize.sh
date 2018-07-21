@@ -40,7 +40,7 @@ crg.vcf2tsv.py $sample.pass.region.vcf > $sample.tsv
 #svscore
 if [ ! -f $sample.pass.region.svscore.vcf ]
 then
-    echo "Generating SV scores: " `echo date`
+    echo "Generating SV scores: " `date`
     SVSCORE_DATA=/hpf/largeprojects/ccmbio/arun/Tools/SVScore
     SVSCORE_SCRIPT=/hpf/largeprojects/ccmbio/naumenko/tools/svscore
     module load perl/5.20.1
@@ -54,7 +54,7 @@ fi
 
 if [ -n "$dgv" ]
 then
-    echo "Generating final report: " `echo date`
+    echo "Generating final report: " `date`
     crg.sv.parse.py $sample.pass.region.svscore.vcf $dgv > $sample.sv.csv
 fi
 
