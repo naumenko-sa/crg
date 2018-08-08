@@ -6,10 +6,10 @@ import sys
 outfile = "overlapping_family_sv.csv"
 csv.field_size_limit(sys.maxsize)
 
-def determine_intersect(first_sample_bed, other_sample_bed, other_sample_sv_dict, interval_dict):
+def determine_intersect(first_sample_bed, other_sample_bed, other_sample_sv, first_sample_sv):
 
 	# bedtools doc: https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html?highlight=intersect
-	# find all SVs in other_sample_bed which overlap and are overlapped by at least 50% of another SV in first_sample_bed
+	# find all SVs in other_sample_bed which overlap a SV in first_sample_bed by >=50% and are overlapped by >=50% by the same SV in first_sample_bed
 	out = os.popen("bedtools intersect -a {} -b {} -wa -wb -F 0.5 -f 0.5".format(first_sample_bed, other_sample_bed)).read()
 
 	for l in out.split("\n"):
@@ -21,10 +21,10 @@ def determine_intersect(first_sample_bed, other_sample_bed, other_sample_sv_dict
 		interval = (chr, start, end)
 		other_interval = (samp_chr, samp_start, samp_end)
 
-		if samp_name not in interval_dict[interval]:
-			interval_dict[interval][samp_name] = []
+		if samp_name not in first_sample_sv[interval]:
+			first_sample_sv[interval][samp_name] = []
 
-		interval_dict[interval][samp_name].append((other_interval, (other_sample_sv_dict[other_interval])))
+		first_sample_sv[interval][samp_name].append((other_interval, (other_sample_sv[other_interval])))
 
 def parse_first_sample_csv(scsv):
 	with open(scsv) as f:
@@ -39,11 +39,7 @@ def parse_first_sample_csv(scsv):
 				continue
 
 			chr, start, gt, svtype, svlen, end, sources, nsvt, genes, ann, svmax, svsum, svtop5, svtop10, svmean, dvg = line
-
 			key = (chr, start, end)
-
-			if key in vdict:
-				raise Exception('FATAL ERROR - Variant {} exists more than once in the sample {}'.format(key, sbed))
 
 			vdict[key] = {}
 			variant_info[key] = (svlen, svmax, svsum, svtop5, svtop10, svmean, dvg)
@@ -52,8 +48,8 @@ def parse_first_sample_csv(scsv):
 
 def parse_sample_csv(scsv):
 
-	#read and create dict from sample csv
-	#vdict format: chr:start-end , svtype
+	#read and create svtype dict from sample csv
+	#vdict format: vdict[(chr, start, end)] = svtype
 
 	with open(scsv) as f:
 
@@ -65,16 +61,10 @@ def parse_sample_csv(scsv):
 			if not line:
 				continue
 
-			#print(line)
 			chr, start, gt, svtype, svlen, end, sources, nsvt, genes, ann, svmax, svsum, svtop5, svtop10, svmean, dvg = line
 
 			key = (chr, start, end)
-
-			if key in vdict:
-				raise Exception('FATAL ERROR - Variant {} exists more than once in the sample file {}'.format(key, sbed))
-
 			vdict[key] = svtype
-			#print("svtype: {}".format(svtype))
 
 	return vdict
 
@@ -109,7 +99,7 @@ def get_longest_svtype(samples):
 	#determine the longest structural variant
 	#then return its annotation
 
-	longest = -1	#will always be overwritten on first iteration since we are using abs()
+	longest = -1	#will always be overwritten on first loop iteration since we are using abs()
 	svtype = ""
 
 	for s in samples:
@@ -131,8 +121,6 @@ def make_sample_details(samples, interval):
 
 	for s in samples:
 
-		#print(s)
-
 		samp_details = []
 
 		if s in interval:
@@ -147,24 +135,20 @@ def make_sample_details(samples, interval):
 
 	return all_samp_details
 
-def write_results(samples, interval_dict, first_sample_sv_info):
+def write_results(samples, first_sample_sv, first_sample_sv_info):
 
 	with open(outfile, "w") as out:
 
 		out.write(make_header(samples))
 
-		for key in sorted(interval_dict.iterkeys()):
-
-			#print(key)
-
-			out_line = ""
+		for key in sorted(first_sample_sv.iterkeys()):
 
 			chr, start, end = key
 
-			index, isthere = make_sample_list_index(samples, interval_dict[key])
-			nsamples = str(len(interval_dict[key]))
-			svtype = get_longest_svtype(interval_dict[key])
-			samp_details = make_sample_details(samples, interval_dict[key])
+			index, isthere = make_sample_list_index(samples, first_sample_sv[key])
+			nsamples = str(len(first_sample_sv[key]))
+			svtype = get_longest_svtype(first_sample_sv[key])
+			samp_details = make_sample_details(samples, first_sample_sv[key])
 
 			svlen, svmax, svsum, svtop5, svtop10, svmean, dvg = first_sample_sv_info[key]
 
@@ -182,9 +166,7 @@ def csv2bed():
 
 	#creates sample.txt
 	#converts each sample csv to a bed file
-	sample_txt_cmd = "ls *.sv.csv | sed s/.sv.csv// > samples.txt"
-	#print(sample_txt_cmd)
-	os.popen(sample_txt_cmd)
+	os.popen("ls *.sv.csv | sed s/.sv.csv// > samples.txt")
 
 	with open("samples.txt") as f:
 		for s in f:
@@ -195,30 +177,31 @@ def csv2bed():
 def main():
 	csv2bed()
 
-	samples = []
-	interval_dict = {}
+	sample_list = []
+	first_sample_sv = {}
 	first_sample_bed = ""
+	first_sample_sv_info = {}
 
 	with open("samples.txt") as f:
 		for i, s in enumerate(f):
 
-			s = s.strip()
+			s = s.strip()	# newline
+
 			sbed = s + ".bed"
 			scsv = s + ".sv.csv"
+			sample_list.append(s)
 
 			if i == 0:
-				interval_dict, first_sample_sv_info = parse_first_sample_csv(scsv)
+				first_sample_sv, first_sample_sv_info = parse_first_sample_csv(scsv)
 				first_sample_bed = sbed
 
-			samples.append(s)
+			other_sample_sv = parse_sample_csv(scsv)
+			determine_intersect(first_sample_bed, sbed, other_sample_sv, first_sample_sv)
 
-			other_sample_sv_dict = parse_sample_csv(scsv)
-			determine_intersect(first_sample_bed, sbed, other_sample_sv_dict, interval_dict)
-
-	write_results(samples, interval_dict, first_sample_sv_info)
+	write_results(sample_list, first_sample_sv, first_sample_sv_info)
 
 if __name__ == '__main__':
-	# Launch script within a folder containing csv files
+	# Launch script within a folder containing multiple sv.csv files
 	print('crg.sv.merge_family.py started processing.')
 	main()
 	print('crg.sv.merge_family.py is done processing!')
