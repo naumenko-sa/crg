@@ -1,9 +1,10 @@
 import os
 import csv
 import re
-from pybedtools import BedTool
+import sys
 
 outfile = "overlapping_family_sv.csv"
+csv.field_size_limit(sys.maxsize)
 
 def determine_intersect(first_sample_bed, other_sample_bed, other_sample_sv_dict, interval_dict):
 
