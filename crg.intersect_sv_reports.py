@@ -2,22 +2,30 @@ import os
 import csv
 import re
 import sys
+import argparse
+
+from datetime import datetime
 from pybedtools import BedTool
 
 outfile = "overlapping_family_sv.csv"
 csv.field_size_limit(sys.maxsize)
 
 def determine_intersect(first_sample_bed, other_sample_bed, other_sample_sv, first_sample_sv):
+	
+	'''
+		Populate first_sample_sv dict with SV info from other_sample_bed which fall within each interval.
+	'''
 
-	# bedtools doc: https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html?highlight=intersect
+	a_bed = BedTool(first_sample_bed)
+	b_bed = BedTool(other_sample_bed)
+
 	# find all SVs in other_sample_bed which overlap a SV in first_sample_bed by >=50% and are overlapped by >=50% by the same SV in first_sample_bed
-	out = os.popen("bedtools intersect -a {} -b {} -wa -wb -F 0.5 -f 0.5".format(first_sample_bed, other_sample_bed)).read()
+	# bedtools doc for more param info: https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html?highlight=intersect
+	overlapping_sv = a_bed.intersect(b_bed, wa=True, wb=True, F=0.5, f=0.5)
 
-	for l in out.split("\n"):
-		if not l:
-			continue
+	for l in overlapping_sv:
 
-		chr, start, end, ref_name, samp_chr, samp_start, samp_end, samp_name = l.split("\t")
+		chr, start, end, ref_name, samp_chr, samp_start, samp_end, samp_name = l
 
 		interval = (chr, start, end)
 		other_interval = (samp_chr, samp_start, samp_end)
@@ -28,11 +36,19 @@ def determine_intersect(first_sample_bed, other_sample_bed, other_sample_sv, fir
 		first_sample_sv[interval][samp_name].append((other_interval, (other_sample_sv[other_interval])))
 
 def parse_first_sample_csv(scsv):
+
+	'''
+		Parse the first sample's CSV and set up data structures to store interval data.
+
+		variant_info holds SV_SCOREs and other column info from the CSV file
+		vdict is to be later used to hold variant info from other samples which fall within a specific interval
+	'''
 	with open(scsv) as f:
 
-		next(f)	#skip the header
 		vdict = {}
 		variant_info = {}
+
+		next(f)	# skip the header
 
 		for line in csv.reader(f, delimiter=",", quotechar="\""):
 
@@ -49,13 +65,18 @@ def parse_first_sample_csv(scsv):
 
 def parse_sample_csv(scsv):
 
-	#read and create svtype dict from sample csv
-	#vdict format: vdict[(chr, start, end)] = svtype
+	'''
+		Store each interval's SVTYPE from CSV file.
+		This info is later used in get_longest_svtype().
+
+		vdict format: vdict[(chr, start, end)] = svtype
+	'''
 
 	with open(scsv) as f:
 
-		next(f)	#skip the header
 		vdict = {}
+
+		next(f)	#skip the header
 
 		for line in csv.reader(f, delimiter=",", quotechar="\""):
 
@@ -70,7 +91,7 @@ def parse_sample_csv(scsv):
 	return vdict
 
 def make_header(samples):
-	fields = ["CHR","START", "END", "N_SAMPLES", "LIST", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DVG", "EXONS_SPANNED"]
+	fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DVG", "EXONS_SPANNED"]
 	header = ",".join(fields)
 
 	for s in samples:
@@ -82,6 +103,11 @@ def make_header(samples):
 	return header + "\n"
 
 def make_sample_list_index(samples, interval):
+
+	'''
+	LIST column
+	e.g. 1;2;3;4;5;6;7
+	'''
 
 	index = []
 	isthere_array = []
@@ -97,8 +123,8 @@ def make_sample_list_index(samples, interval):
 	return (";".join(index), isthere_array)
 
 def get_longest_svtype(samples):
-	#determine the longest structural variant
-	#then return its annotation
+
+	# determine the longest structural variant, then return its annotation
 
 	longest = -1	#will always be overwritten on first loop iteration since we are using abs()
 	svtype = ""
@@ -112,11 +138,15 @@ def get_longest_svtype(samples):
 			if length > longest:
 				length = longest
 				svtype = variant[1]
-				#print("variant: " + variant[1])
 
 	return svtype
 
 def make_sample_details(samples, interval):
+
+	'''
+	SAMPLENAME_details column
+	e.g. 1:10334731-10334817:DEL
+	'''
 
 	all_samp_details = []
 
@@ -138,6 +168,10 @@ def make_sample_details(samples, interval):
 
 def write_results(samples, first_sample_sv, first_sample_sv_info, overlapping_exon_count):
 
+	'''
+	A lot of string manipulation to generate the final CSV file line by line
+	'''
+
 	with open(outfile, "w") as out:
 
 		out.write(make_header(samples))
@@ -158,16 +192,20 @@ def write_results(samples, first_sample_sv, first_sample_sv_info, overlapping_ex
 			out.write(out_line)
 
 def csv2bed():
-	#taken from sergey's previous script - crg.sv.merge_family.sh
-	'''ls *.sv.csv | sed s/.sv.csv// > samples.txt
+	# taken from sergey's previous script - crg.sv.merge_family.sh
+
+	'''
+		ls *.sv.csv | sed s/.sv.csv// > samples.txt
 
 		for sample in `cat samples.txt`
 		do
 		    cat $sample.sv.csv | sed 1d | awk -F '","' -v smpl=$sample '{print $1"\t"$2"\t"$6"\t"smpl}' | sed s/"\""// | sort -k1,1 -k2,2n > $sample.bed
-		done'''
+		done
+	'''
 
-	#creates sample.txt
-	#converts each sample csv to a bed file
+	# creates sample.txt
+	# converts each sample csv to a bed file
+
 	os.popen("ls *.sv.csv | sed s/.sv.csv// > samples.txt")
 
 	with open("samples.txt") as f:
@@ -176,7 +214,7 @@ def csv2bed():
 			cmd = "cat {}.sv.csv | sed 1d | awk -F \'\",\"\' -v smpl={} \'{{print $1\"\\t\"$2\"\\t\"$6\"\\t\"smpl}}\' | sed s/\"\\\"\"// | sort -k1,1 -k2,2n > {}.bed".format(s, s, s)
 			os.popen(cmd)
 
-def find_overlapping_exons(sv_dict, sbed, exon_bed="protein_coding_genes.exons.fixed.sorted.bed"):
+def find_overlapping_exons(sv_dict, sbed, exon_bed):
 
 	'''
 		By referencing a list of fixed exon locations in a bed file, determine the number of exons a SV spans
@@ -209,13 +247,15 @@ def find_overlapping_exons(sv_dict, sbed, exon_bed="protein_coding_genes.exons.f
 
 	return overlapping_exon_count
 
-def main():
+def main(exon_bed):
+
 	csv2bed()
 
 	sample_list = []
 	first_sample_sv = {}
 	first_sample_bed = ""
 	first_sample_sv_info = {}
+	overlapping_exon_count = {}
 
 	with open("samples.txt") as f:
 		for i, s in enumerate(f):
@@ -233,12 +273,19 @@ def main():
 			other_sample_sv = parse_sample_csv(scsv)
 			determine_intersect(first_sample_bed, sbed, other_sample_sv, first_sample_sv)
 
-	overlapping_exon_count = find_overlapping_exons(first_sample_sv, first_sample_bed)
+	overlapping_exon_count = find_overlapping_exons(first_sample_sv, first_sample_bed, exon_bed)
 
 	write_results(sample_list, first_sample_sv, first_sample_sv_info, overlapping_exon_count)
 
 if __name__ == '__main__':
+
 	# Launch script within a folder containing multiple sv.csv files
-	print('crg.sv.merge_family.py started processing.')
-	main()
-	print('crg.sv.merge_family.py is done processing!')
+
+	parser = argparse.ArgumentParser(description='Generate a clinical report in CSV format for structural variants')
+	parser.add_argument('-exon_bed', default="/home/naumenko/Desktop/reference_tables/protein_coding_genes.exons.fixed.sorted.bed", help='BED file containing fixed exon positions')
+
+	args = parser.parse_args()
+
+	print('crg.sv.merge_family.py started processing on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
+	main(args.exon_bed)
+	print('crg.sv.merge_family.py finished on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
