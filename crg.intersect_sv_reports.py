@@ -2,6 +2,7 @@ import os
 import csv
 import re
 import sys
+from pybedtools import BedTool
 
 outfile = "overlapping_family_sv.csv"
 csv.field_size_limit(sys.maxsize)
@@ -69,7 +70,7 @@ def parse_sample_csv(scsv):
 	return vdict
 
 def make_header(samples):
-	fields = ["CHR","START", "END", "N_SAMPLES", "LIST", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DVG"]
+	fields = ["CHR","START", "END", "N_SAMPLES", "LIST", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DVG", "EXONS_SPANNED"]
 	header = ",".join(fields)
 
 	for s in samples:
@@ -135,7 +136,7 @@ def make_sample_details(samples, interval):
 
 	return all_samp_details
 
-def write_results(samples, first_sample_sv, first_sample_sv_info):
+def write_results(samples, first_sample_sv, first_sample_sv_info, overlapping_exon_count):
 
 	with open(outfile, "w") as out:
 
@@ -151,8 +152,9 @@ def write_results(samples, first_sample_sv, first_sample_sv_info):
 			samp_details = make_sample_details(samples, first_sample_sv[key])
 
 			svlen, svmax, svsum, svtop5, svtop10, svmean, dvg = first_sample_sv_info[key]
+			n_exon_spanned = str(overlapping_exon_count[key])
 
-			out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, svtype, svlen, svmax, svsum, svtop5, svtop10, svmean, dvg]), ",".join(isthere), ",".join(samp_details))
+			out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, svtype, svlen, svmax, svsum, svtop5, svtop10, svmean, dvg, n_exon_spanned]), ",".join(isthere), ",".join(samp_details))
 			out.write(out_line)
 
 def csv2bed():
@@ -173,6 +175,39 @@ def csv2bed():
 			s = s.strip()
 			cmd = "cat {}.sv.csv | sed 1d | awk -F \'\",\"\' -v smpl={} \'{{print $1\"\\t\"$2\"\\t\"$6\"\\t\"smpl}}\' | sed s/\"\\\"\"// | sort -k1,1 -k2,2n > {}.bed".format(s, s, s)
 			os.popen(cmd)
+
+def find_overlapping_exons(sv_dict, sbed, exon_bed="protein_coding_genes.exons.fixed.sorted.bed"):
+
+	'''
+		By referencing a list of fixed exon locations in a bed file, determine the number of exons a SV spans
+		Returns a dict where each interval maps to the exon count
+	'''
+
+	tmp_bed_name = "tmp_interval.bed"
+
+	exon_ref = BedTool(exon_bed)
+	sample = BedTool(sbed)
+
+	overlapping_exon_count = {}
+
+	for interval in sample:
+
+		chr, start, end, gene = interval
+
+		# create a temp bed file with 1 line - the interval of interest
+		with open(tmp_bed_name, "w") as f:	# overwrites file with each loop
+			f.write('{}\t{}\t{}\n'.format(interval.chrom, interval.start, interval.end))
+
+		tmp_bed = BedTool(tmp_bed_name)
+
+		# count overlapping regions
+		n_exons = tmp_bed.intersect(exon_ref).count()
+
+		overlapping_exon_count[(chr, start, end)] = n_exons
+
+	os.remove(tmp_bed_name)	#delete temp file
+
+	return overlapping_exon_count
 
 def main():
 	csv2bed()
@@ -198,7 +233,9 @@ def main():
 			other_sample_sv = parse_sample_csv(scsv)
 			determine_intersect(first_sample_bed, sbed, other_sample_sv, first_sample_sv)
 
-	write_results(sample_list, first_sample_sv, first_sample_sv_info)
+	overlapping_exon_count = find_overlapping_exons(first_sample_sv, first_sample_bed)
+
+	write_results(sample_list, first_sample_sv, first_sample_sv_info, overlapping_exon_count)
 
 if __name__ == '__main__':
 	# Launch script within a folder containing multiple sv.csv files
