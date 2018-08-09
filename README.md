@@ -8,12 +8,12 @@ clinical reseach genome scripts
 - project_sample.bam
 - project_sample_1.fq.gz
 - project_sample_2.fq.gz
-3. crg.prepare_bcbio_run.sh project
-4. qsub ~/cre/bcbio.pbs -v project=project\
+3. `crg.prepare_bcbio_run.sh project`
+4. `qsub ~/cre/bcbio.pbs -v project=project`\
 or for multiple projects create projects.txt and run\
-qsub -t 1-N ~/cre/bcbio.array.pbs\
+`qsub -t 1-N ~/cre/bcbio.array.pbs`\
 where N = number of projects in the current dir.
-5. qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs - cleaning up temporary files
+5. `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
 # Report columns:
 - CHR
