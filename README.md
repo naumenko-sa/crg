@@ -2,7 +2,8 @@
 clinical reseach genome scripts
 
 # Steps:
-1. Create project(=case=family) dir: mkdir -p project/input.
+1. Create project(=case=family) dir:\
+`mkdir -p project/input`
 2. Copy/symlink input files to project/input: 
 - project_sample.bam
 - project_sample_1.fq.gz
