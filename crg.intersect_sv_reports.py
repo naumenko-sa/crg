@@ -13,7 +13,7 @@ csv.field_size_limit(sys.maxsize)
 def determine_intersect(first_sample_bed, other_sample_bed, other_sample_sv, first_sample_sv):
 	
 	'''
-		Populate first_sample_sv dict with SV info from other_sample_bed which fall within each interval.
+		Populate first_sample_sv dict with overlapping SVs from another bed file.
 	'''
 
 	a_bed = BedTool(first_sample_bed)
@@ -105,8 +105,8 @@ def make_header(samples):
 def make_sample_list_index(samples, interval):
 
 	'''
-	LIST column
-	e.g. 1;2;3;4;5;6;7
+		LIST column
+		e.g. 1;2;3;4;5;6;7
 	'''
 
 	index = []
@@ -124,7 +124,9 @@ def make_sample_list_index(samples, interval):
 
 def get_longest_svtype(samples):
 
-	# determine the longest structural variant, then return its annotation
+	'''
+		Determine the longest structural variant, then return its annotation
+	'''
 
 	longest = -1	#will always be overwritten on first loop iteration since we are using abs()
 	svtype = ""
@@ -144,8 +146,8 @@ def get_longest_svtype(samples):
 def make_sample_details(samples, interval):
 
 	'''
-	SAMPLENAME_details column
-	e.g. 1:10334731-10334817:DEL
+		SAMPLENAME_details column
+		e.g. 1:10334731-10334817:DEL
 	'''
 
 	all_samp_details = []
@@ -169,7 +171,7 @@ def make_sample_details(samples, interval):
 def write_results(samples, first_sample_sv, first_sample_sv_info, overlapping_exon_count):
 
 	'''
-	A lot of string manipulation to generate the final CSV file line by line
+		A lot of string manipulation to generate the final CSV file line by line
 	'''
 
 	with open(outfile, "w") as out:
@@ -279,7 +281,12 @@ def main(exon_bed):
 
 if __name__ == '__main__':
 
-	# Launch script within a folder containing multiple sv.csv files
+	'''
+		How to use: Navigate to a folder containing multiple sv.csv files and launch the script.
+		Program generates a CSV file named after outfile variable.
+
+		python crg.intersect_sv_reports.py -exon_bed="/absolute/path/to/protein_coding_genes.exons.bed"
+	'''
 
 	parser = argparse.ArgumentParser(description='Generate a clinical report in CSV format for structural variants')
 	parser.add_argument('-exon_bed', default="/home/naumenko/Desktop/reference_tables/protein_coding_genes.exons.fixed.sorted.bed", help='BED file containing fixed exon positions')
