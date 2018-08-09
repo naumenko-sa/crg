@@ -1,6 +1,9 @@
 # crg
 clinical reseach genome scripts
 
+# Steps:
+-  qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs - cleaning up temporary files
+
 # Report columns:
 - CHR
 - POS
