@@ -19,6 +19,7 @@ def determine_intersect(first_sample_bed, other_sample_bed, other_sample_sv_info
 
 	a_bed = BedTool(first_sample_bed)
 	b_bed = BedTool(other_sample_bed)
+	grouped_interval = []
 
 	# find all SVs in other_sample_bed which overlap a SV in first_sample_bed by >=50% and are overlapped by >=50% by the same SV in first_sample_bed
 	# bedtools doc for more param info: https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html?highlight=intersect
@@ -31,13 +32,15 @@ def determine_intersect(first_sample_bed, other_sample_bed, other_sample_sv_info
 		interval = (chr, start, end)
 		other_interval = (samp_chr, samp_start, samp_end)
 
-		if interval not in all_sv:
-			all_sv[interval] = {}
+		if other_interval not in grouped_interval:
+			if interval not in all_sv.iterkeys():
+				all_sv[interval] = {}
 
-		if samp_name not in all_sv[interval]:
-			all_sv[interval][samp_name] = []
+			if samp_name not in all_sv[interval]:
+				all_sv[interval][samp_name] = []
 
-		all_sv[interval][samp_name].append((other_interval, other_sample_sv_info[other_interval]))
+			all_sv[interval][samp_name].append((other_interval, other_sample_sv_info[other_interval]))
+			grouped_interval.append(other_interval)
 
 	# report all SV in B which did not meet intersection criteria above
 	return b_bed.intersect(a_bed, F=0.5, f=0.5, v=True)
@@ -276,7 +279,7 @@ def main(exon_bed, outfile_name, input_files):
 			try:
 				os.mkdir(next_dir)
 			except OSError:
-				pass
+				pass # if directory already exists, just use it
 
 		a_bed = current_dir + sample_list[i] + ".bed"
 		a_csv = sample_list[i] + ".sv.csv"
@@ -287,16 +290,15 @@ def main(exon_bed, outfile_name, input_files):
 
 			b_bed = current_dir + sample_list[j] + ".bed"
 			b_csv = sample_list[j] + ".sv.csv"
+			b_svtype_svlen_dict = make_svtype_svlen_dict(b_csv)
 
 			# print("pass {}: {} {}".format(str(i), a_bed, b_bed) )
 
-			b_svtype_svlen_dict = make_svtype_svlen_dict(b_csv)
 			leftover_sv = determine_intersect(a_bed, b_bed, b_svtype_svlen_dict, all_sv)
 
-			# store all leftover_sv in tmp dir for processing in next pass
-			if i != j: #if A and B are the same bed file, no need to create tmp file
+			if i != j:
 				new_bed = next_dir + sample_list[j] + ".bed"
-				make_bed_file(leftover_sv, new_bed)
+				make_bed_file(leftover_sv, new_bed) # store all leftover_sv in tmp dir for processing in next pass
 
 	# generate temporary bed file containing all intervals
 	with open("all_sv.bed", "w") as f:
@@ -317,8 +319,8 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Generates a clinical report in CSV format for structural variants')
 	parser.add_argument('-exon_bed', default="/home/naumenko/Desktop/reference_tables/protein_coding_genes.exons.fixed.sorted.bed", help='BED file containing fixed exon positions', required=True)
-	parser.add_argument('-o', help='Output file name e.g. 200.sv.family.csv', required=True, type=str)
-	parser.add_argument('-i', nargs='+', help='Input file names including .sv.csv extension', required=True)
+	parser.add_argument('-o', help='Output file name e.g. -o 200.sv.family.csv', required=True, type=str)
+	parser.add_argument('-i', nargs='+', help='Input file names including .sv.csv extension, e.g. -i 180_230.sv.csv 180_231.sv.csv', required=True)
 	args = parser.parse_args()
 
 	print('crg.sv.merge_family.py started processing on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
