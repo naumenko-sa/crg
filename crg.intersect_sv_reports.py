@@ -97,7 +97,7 @@ def make_svtype_svlen_dict(scsv):
 	return vdict
 
 def make_header(samples):
-	fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED"]
+	fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK"]
 	header = ",".join(fields)
 
 	for s in samples:
@@ -194,11 +194,12 @@ def write_results(samples, all_sv, all_sv_info, overlapping_exon_count, outfile_
 			nsamples = str(len(all_sv[key]))
 			svtype = get_longest_svtype(all_sv[key])
 			samp_details = make_sample_details(samples, all_sv[key])
-
+			decipher_link = '=hyperlink("https://decipher.sanger.ac.uk/browser#q/{}:{}-{}")'.format(chr, start, end)
+			
 			svlen, svmax, svsum, svtop5, svtop10, svmean, dvg, gene = all_sv_info[key]
 			n_exon_spanned = str(overlapping_exon_count[key])
 
-			out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, gene, svtype, svlen, svmax, svsum, svtop5, svtop10, svmean, dvg, n_exon_spanned]), ",".join(isthere), ",".join(samp_details))
+			out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, gene, svtype, svlen, svmax, svsum, svtop5, svtop10, svmean, dvg, n_exon_spanned, decipher_link]), ",".join(isthere), ",".join(samp_details))
 			out.write(out_line)
 
 def csv2bed(input_files):
