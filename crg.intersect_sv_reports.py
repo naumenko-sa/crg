@@ -63,12 +63,26 @@ class StructuralVariant:
 
 class StructuralVariantRecords:
 
+	'''
+		Holds groupings of StructuralVariant.
+
+		Groupings in the dict grouped_sv follows this structure:
+			grouped_sv[ref_interval][samp_name]
+
+		Additional information about the ref_interval used to group other sample intervals is stored in:
+			all_ref_interval_data[(chr, start, end)]
+	'''
+
 	def __init__(self, _sample_list):
 		self.grouped_sv = {}
 		self.all_ref_interval_data = {}
 		self.sample_list = _sample_list
 
 	def add_interval(self, ref_interval, new_interval, column_data, samp_name):
+		'''
+			Adds new_interval to the dict under the key ref_interval
+			Column data relating to a ref_interval is stored as well
+		'''
 		if ref_interval not in self.grouped_sv.iterkeys():
 			self.grouped_sv[ref_interval] = {}
 			self.all_ref_interval_data[ref_interval] = column_data[ref_interval]
@@ -80,7 +94,7 @@ class StructuralVariantRecords:
 
 	def make_sample_list_index(self, interval):
 		'''
-			LIST column
+			Makes string for LIST column
 			e.g. 1;2;3;4;5;6;7
 		'''
 		index = []
@@ -97,12 +111,9 @@ class StructuralVariantRecords:
 
 	def make_sample_details(self, interval):
 		'''
-			SAMPLENAME_details column
+			Makes list for SAMPLENAME_details column
 			e.g. 1:10334731-10334817:DEL;1:10334769-10334833:DUP
 		'''
-
-		#print(interval)
-
 		all_samp_details = []
 
 		for s in self.sample_list:
@@ -149,6 +160,10 @@ class StructuralVariantRecords:
 		return longest_svtype
 
 	def BedTool_make_all_sv(self, bed_name):
+		'''
+			Creates a bed file containing all reference intervals and returns a BedTool object
+			This is necessary since bedtools only operates on files
+		'''
 		with open(bed_name, "w") as f:
 			for sv in self.grouped_sv:
 				f.write('{}\t{}\t{}\t{}.\n'.format(sv[0], sv[1], sv[2], bed_name))
@@ -198,12 +213,10 @@ class StructuralVariantRecords:
 		all_sv_bed = self.BedTool_make_all_sv(tmp_all_sv_bed_name)
 		pop_bed = BedTool(decipher_pop_bed_name)
 
-	def write_results(self, outfile_name, exon_bed):
+	def write_results(self, outfile_name):
 		'''
 			A lot of string manipulation to generate the final CSV file line by line
 		'''
-		self.calc_exons_spanned(exon_bed)
-
 		with open(outfile_name, "w") as out:
 
 			out.write(self.make_header())
@@ -213,7 +226,6 @@ class StructuralVariantRecords:
 				chr, start, end = key
 				ref_interval = self.all_ref_interval_data[key]
 
-				#sample dependent fields
 				index, isthere = self.make_sample_list_index(self.grouped_sv[key])
 				nsamples = str(len(self.grouped_sv[key]))
 				svtype = self.get_longest_svtype(self.grouped_sv[key])
@@ -222,20 +234,22 @@ class StructuralVariantRecords:
 				out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref_interval.gene, svtype, ref_interval.svlen, ref_interval.svmax, ref_interval.svsum, ref_interval.svtop5, ref_interval.svtop10, ref_interval.svmean, ref_interval.dgv, ref_interval.exons_spanned, ref_interval.make_decipher_link()]), ",".join(isthere), ",".join(samp_details))
 				out.write(out_line)
 
-def determine_intersect(a_bed_name, b_bed_name, column_data, all_sv_records):
+def group_sv(a_bed_name, b_bed_name, column_data, all_sv_records):
 	
 	'''
-		Populate all_sv dict with overlapping SVs from another bed file.
+		Groups intervals which overlap with a "reference" interval in sample a.
 
-		Returns intervals which did not meet overlapping criteria.
+		Overlapping is defined as: each interval overlaps each other by >= 50% of their respective length.
+		This gaurentees that grouping occurs when intervals are relatively the same size and overlap one another by a "significant" amount.
+
+		Returns a BedTool instance containing all the intervals which did not meet the overlapping criteria.
 	'''
 
 	a_bed = BedTool(a_bed_name)
 	b_bed = BedTool(b_bed_name)
 	already_grouped_intervals = []
 
-	# find all SVs in b_bed which overlap a SV in a_bed by >=50% and are overlapped by >=50% by the same SV in first_sample_bed
-	# bedtools doc for more param info: https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html?highlight=intersect
+	# Find all SVs in b_bed which overlap a SV in a_bed by >=50% and are overlapped by >=50% by the same SV in first_sample_bed
 	overlapping_sv = a_bed.intersect(b_bed, wa=True, wb=True, F=0.5, f=0.5)
 
 	for l in overlapping_sv:
@@ -249,13 +263,13 @@ def determine_intersect(a_bed_name, b_bed_name, column_data, all_sv_records):
 			all_sv_records.add_interval(ref_interval, new_interval, column_data, samp_name)
 			already_grouped_intervals.append(new_interval)
 
-	# report all SV in B which did not meet intersection criteria above
 	return b_bed.intersect(a_bed, F=0.5, f=0.5, v=True)
 
 def csv2bed(input_files):
 	'''
-		Taken from sergey's previous script - crg.sv.merge_family.sh
-		Converts each sample csv to a bed file
+		Taken from Sergey's previous script - crg.sv.merge_family.sh
+		Converts each sample csv to a bed file using bash commands
+
 		Returns list of sample file names with extension removed
 	'''
 	sample_list = []
@@ -271,14 +285,17 @@ def csv2bed(input_files):
 
 	return sample_list
 
-def make_bed_file(interval, bed_dir):
+def make_bed_file(intervals, bed_dir):
+	'''
+		Write all intervals from a BedTools instance to a .bed file
+	'''
 	with open(bed_dir, "w") as f:
-		for i in interval:
+		for i in intervals:
 			f.write(str(i))
 
 def parse_csv(sample_csv, column_data):
 	'''
-		Parse a sample's CSV and store column data associated with an interval to all_ref_interval_data.
+		Parse a sample's CSV and stores column data associated with an interval to all_ref_interval_data.
 	'''
 	with open(sample_csv) as f:
 
@@ -314,7 +331,13 @@ def parse_csv(sample_csv, column_data):
 				column_data[key] = newSV
 
 def main(exon_bed, outfile_name, input_files, decipher_population, decipher_pathogenic):
+	'''
+		Loop over input files performing bedtools intersect to get a grouping of intervals.
+		Intervals which do not meet overlapping criteria are stored in a bed file in a pass_# folder for
+		the next loop iteration. In my experience, these files only contain < 10 lines/intervals.
 
+		See group_sv() for more details on what is defined as "overlapping criteria" 
+	'''
 	sample_list = csv2bed(input_files)
 	all_sv_records = StructuralVariantRecords(sample_list)
 	all_column_data = {}
@@ -327,7 +350,7 @@ def main(exon_bed, outfile_name, input_files, decipher_population, decipher_path
 		if i != 0:
 			current_dir = 'pass_{}/'.format(str(i))
 
-		if i != len(sample_list)-1: # if not on last sample, create folder for input files in next processing loop
+		if i != len(sample_list)-1: # if not on last sample, create folder for input files in next processing pass
 			next_dir = "pass_{}/".format(str(i+1))
 
 			try:
@@ -346,19 +369,38 @@ def main(exon_bed, outfile_name, input_files, decipher_population, decipher_path
 
 			# print("pass {}: {} {}".format(str(i), a_bed, b_bed) )
 
-			leftover_sv = determine_intersect(a_bed, b_bed, all_column_data, all_sv_records)
+			leftover_sv = group_sv(a_bed, b_bed, all_column_data, all_sv_records)
 
 			if i != j:
 				new_bed = next_dir + sample_list[j] + ".bed"
 				make_bed_file(leftover_sv, new_bed) # store all leftover_sv in tmp dir for processing in next pass
 
-	all_sv_records.write_results(outfile_name, exon_bed)
+	all_sv_records.calc_exons_spanned(exon_bed)
+	all_sv_records.write_results(outfile_name)
 
 if __name__ == '__main__':
 	'''
-		How to use: Navigate to a folder containing multiple sv.csv files and launch the script.
-		Program generates a CSV file named after outfile variable.
+		crg.intersect.sv.reports.py
+		August 2018
+		Center for Computational Medicine, SickKids, Dennis Kao
 
+		Purpose: 
+				To consolidate interval information across several samples and allow for analysis across a family/small population. In my work, intervals belong to the
+				regions of structural variants. 
+		How to use: 
+				Navigate to a folder containing multiple .sv.csv files and launch the script. Then use Excel or some other spreadsheet software to filter the results.
+		Output: 
+				CSV file containing grouped intervals and metadata.
+		Limitations: 
+				Script is heavily IO bound because it relies on bedtools, a program which only operates on files. calc_exons_spanned() creates a file for each interval
+				being calculated and thus is the most costly function. The main() loop creates files in pass_# folders containing intervals that did not meet the overlapping criteria
+				but this doesn't really hinder performance since almost all intervals do tend to meet the overlapping criteria.
+
+				Actual run time is acceptable for my uses. Researchers looking to run this code on a large sample size (>50) may want to look in to using RAMdisk.
+		Typical runtime:
+				<30 s for 2 samples
+				>3 mins for 4 - 8 samples
+		
 		python crg.intersect_sv_reports.py -exon_bed="protein_coding_genes.exons.bed" -o="180.sv.family.csv" -i 180_123.sv.csv 180_444.sv.csv
 	'''
 	parser = argparse.ArgumentParser(description='Generates a structural variant report in CSV format for clincal research')
