@@ -1,0 +1,40 @@
+details:
+- algorithm:
+    aligner: bwa
+    effects: vep
+    effects_transcripts: all
+    ensemble:
+      numpass: 2
+      use_filtered: false
+    realign: true
+    recalibrate: true
+    remove_lcr: false
+    mark_duplicates: true
+    save_diskspace: true
+    svcaller: [lumpy, manta, cnvkit, metasv, wham]
+    tools_on:
+    - gemini
+    - svplots
+    - qualimap
+    - vep_splicesite_annotations
+    - noalt_calling
+    variantcaller:
+    - gatk-haplotype
+    vcfanno:
+    - /home/naumenko/cre/cre.vcfanno.conf
+  analysis: variant2
+  description: 'project_sample'
+  files:
+  - /hpf/largeprojects/ccmbio/naumenko/project_cheo/912R/input/912R_A337376.bam
+  genome_build: GRCh37
+  metadata:
+    batch: 912R
+resources:
+  default:
+    cores: 7
+    jvm_opts:
+    - -Xms750m
+    - -Xmx7000m
+    memory: 7G
+upload:
+  dir: ../final
