@@ -28,7 +28,7 @@ template=~/crg/crg.bcbio.wgs.yaml
 
 if [ -n "$2" ]
 then
-    template=~/crg/crg.wgs_noalign.yaml
+    template=~/crg/crg.templates.wgs.noalign.yaml
 fi
 
 bcbio_nextgen.py -w template $template $family.csv input/*
