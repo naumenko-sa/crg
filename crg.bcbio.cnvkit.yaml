@@ -1,21 +1,21 @@
 details:
 - algorithm:
-    aligner: bwa
+    aligner: false
     effects: vep
     effects_transcripts: all
     realign: false
     recalibrate: false
     remove_lcr: true
-    mark_duplicates: true
+    mark_duplicates: false
     save_diskspace: true
-    svcaller: [lumpy, manta, cnvkit, metasv, wham]
+    svcaller:
+    - cnvkit
     tools_on:
     - svplots
     - qualimap
     - vep_splice_annotations
     - noalt_calling
-    variantcaller:
-    - gatk-haplotype
+    variantcaller: false
   analysis: variant2
   description: '912R_A337376'
   files:
