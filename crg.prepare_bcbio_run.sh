@@ -3,7 +3,7 @@
 # prepares family for bcbio run when input files are family_sample.bam or family_sample_1/2.fq.gz
 family=$1
 
-#if set $2=any_value, uses a template without alignment (mainly for rerunning)
+# template type = default | noalign | align_decoy
 noalign=$2
 
 cd $family
@@ -26,9 +26,17 @@ done < samples.txt
 #default template
 template=~/crg/crg.bcbio.wgs.yaml
 
+template_type=$2
+
 if [ -n "$2" ]
 then
-    template=~/crg/crg.templates.wgs.noalign.yaml
+    if [ $template_type == "noalign" ]
+    then
+	template=~/crg/crg.templates.wgs.noalign.yaml
+    elif [ $template_type == "align_decoy" ]
+    then
+	template=~/crg/crg.align_decoy.yaml
+    fi
 fi
 
 bcbio_nextgen.py -w template $template $family.csv input/*
