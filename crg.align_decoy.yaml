@@ -1,3 +1,4 @@
+# this one is different from wes (cre) because here we are using gatk4
 details:
 - algorithm:
     aligner: bwa
