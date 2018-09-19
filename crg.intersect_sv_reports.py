@@ -160,18 +160,18 @@ if __name__ == '__main__':
 		Center for Computational Medicine, SickKids, Dennis Kao
 
 		Purpose: 
-				To consolidate interval information across several samples and allow for analysis across a family/small population. In my work, intervals belong to the
+				To group interval information across several samples and allow for analysis across a family/small population. In my work, intervals belong to the
 				regions of structural variants. 
 		How to use: 
 				Navigate to a folder containing multiple .sv.csv files and launch the script. Then use Excel or some other spreadsheet software to filter the results.
 		Output: 
 				CSV file containing grouped intervals and metadata.
 		Limitations: 
-				Script is heavily IO bound because it relies on bedtools, a program which only operates on files. calc_exons_spanned() creates a file for each interval
-				being calculated and thus is the most costly function. The main() loop creates files in pass_# folders containing intervals that did not meet the overlapping criteria
-				but this doesn't really hinder performance since almost all intervals do tend to meet the overlapping criteria.
+				Script is IO bound because it relies on bedtools, a program which only operates on files. calc_exons_spanned() creates a file for each interval
+				being calculated and thus is the most costly function.
 
-				Actual run time is acceptable for my uses. Researchers looking to run this code on a large sample size (>50) may want to look in to using RAMdisk.
+				Actual run time is acceptable for my uses. Researchers looking to run this code on a large sample size (>50) may want to look in to using SSD's or RAMdisk.
+		
 		Typical runtime:
 				<30 s for 2 samples
 				>3 mins for 4 - 8 samples
@@ -179,7 +179,7 @@ if __name__ == '__main__':
 		python crg.intersect_sv_reports.py -exon_bed="protein_coding_genes.exons.bed" -o="180.sv.family.csv" -i 180_123.sv.csv 180_444.sv.csv
 	'''
 	parser = argparse.ArgumentParser(description='Generates a structural variant report in CSV format for clincal research')
-	parser.add_argument('-exon_bed', default="/home/naumenko/Desktop/reference_tables/protein_coding_genes.exons.fixed.sorted.bed", help='BED file containing fixed exon positions', required=True)
+	parser.add_argument('-exon_bed', default="/home/dennis.kao/gene_panels/protein_coding_genes.exons.fixed.sorted.bed", help='BED file containing fixed exon positions')
 	parser.add_argument('-decipher_population', help='TSV file containing population CNVs frequencies from Decipher\'s internal database')
 	parser.add_argument('-decipher_pathogenic', help='TSV file containing deleterious CNVs data from Decipher\'s internal database')
 	parser.add_argument('-o', help='Output file name e.g. -o 180.sv.family.csv', required=True, type=str)
