@@ -26,7 +26,7 @@ where N = number of projects in the current dir.
 - NUM_SVTOOLS: how many programs supported the event
 - GENES: genes overlapping the event (mostly one gene)
 - ANN: raw annotation from VEP
-- SVscores: [SVscore-github](https://github.com/lganel/SVScore),[SVscore-article](https://academic.oup.com/bioinformatics/article/33/7/1083/2748212)
+- SVscores: [SVscore-github](https://github.com/lganel/SVScore), [SVscore-article](https://academic.oup.com/bioinformatics/article/33/7/1083/2748212)
   - SVSCOREMAX
   - SVSCORESUM
   - SVSCORETOP5
@@ -37,7 +37,7 @@ where N = number of projects in the current dir.
 # Family report
 crg.intersect_sv_reports.py is a script which groups then annotates structural variants across multiple samples. 
 
-Grouping is useful when analyzing family members as most strctural variants should be similar and conserved. The criteria for grouping is defined as a minimum of a 50% recipricol overlap with an arbitrary "reference" structural variant's interval. This criteria gaurentees that grouped structural variants are of similar size and position.
+Grouping is useful when analyzing families as most structural variants should be similar and conserved across samples. The criteria for grouping is defined as a minimum of a 50% recipricol overlap with an arbitrary "reference" interval. This criteria gaurentees that grouped structural variants are of similar size and position.
 
 Annotation is largely accomplished by using a tool called [AnnotSV](http://lbgi.fr/AnnotSV/) made by [Véronique Geoffroy](https://www.researchgate.net/profile/Veronique_Geoffroy2). DGV, DDD, GC, TAD and ENCODE columns come directly from AnnotSV.
 Information on each of these columns can be found on the [AnnotSV website](http://lbgi.fr/AnnotSV/annotations).
