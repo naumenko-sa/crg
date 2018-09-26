@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pybedtools import BedTool
 
 class StructuralVariant:
@@ -28,21 +29,31 @@ class StructuralVariant:
 		#TCAG Frequency
 		self.dgv = ""
 
-		#DECIPHER Population values
-		self.del_obs = ""
-		self.del_freq = ""
-		self.del_se = ""
-		self.dup_obs = ""
-		self.dup_freq = ""
-		self.dup_sta = ""
-		self.obs = ""
-		self.freq = ""
-		self.se = ""
-		self.cnv_type = ""
-		self.samp_size = ""
-		self.study = ""
+		#AnnotSV - DGV Fields
+		self.dgv_gain_id = ""
+		self.dgv_gain_n_samples_with_sv = ""
+		self.dgv_gain_n_samples_tested = ""
+		self.dgv_gain_freq = ""
 
-		#DECIPHER CNVS values
+		self.dgv_loss_id = ""
+		self.dgv_loss_n_samples_with_sv = ""
+		self.dgv_loss_n_samples_tested = ""
+		self.dgv_loss_freq = ""
+
+		#AnnotSV - DDD fields
+		self.ddd_sv = ""
+		self.ddd_dup_n_samples_with_sv = ""
+		self.ddd_dup_freq = ""
+		self.ddd_del_n_samples_with_sv = ""
+		self.ddd_del_freq = ""
+
+		#AnnotSV - GC Content
+		self.GCcontent_left = ""
+		self.GCcontent_right = ""
+
+		#AnnotSV - TAD annotations (Topologically Associating Domains)
+		self.TADcoord = ""
+		self.ENCODEexperiments = ""
 
 	def make_decipher_link(self):
 		return '=hyperlink("https://decipher.sanger.ac.uk/browser#q/{}:{}-{}")'.format(self.chr, self.start, self.end)
@@ -122,7 +133,8 @@ class StructuralVariantRecords:
 		return all_samp_details
 
 	def make_header(self):
-		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK"]
+
+		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK", "DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", "DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", "DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", "GCcontent_left", "GCcontent_right", "TADcoordinates", "ENCODEexperiments"]
 		header = ",".join(fields)
 
 		for s in self.sample_list:
@@ -186,24 +198,48 @@ class StructuralVariantRecords:
 		os.remove(tmp_bed_name)
 		os.remove(tmp_all_sv_bed_name)
 
-	def decipher_pop_cnv_freq(decipher_population):
-		
-		cnv_freq = {}
+	def run_annotsv(self):
 
-		tmp_all_sv_bed_name = "tmp_all_sv.bed"
-		decipher_pop_bed_name = "decipher_pop_cnv.bed"
+		all_sv_bed_name = "all_sv.bed"
+		annotated = "./{}.annotated.tsv".format(all_sv_bed_name)
+		all_sv = self.BedTool_make_all_sv(all_sv_bed_name)
 
-		with open(decipher_population) as f:
-			for sv in f:
-				cnv_id, chr, start, end, del_obs, del_freq, del_se, dup_obs, dup_freq, dup_sta, obs, freq, se, cnv_type, samp_size, study = sv.split("\t")
-				cnv_freq[(chr, start, end)] = [cnv_id, del_obs, del_freq, del_se, dup_obs, dup_freq, dup_sta, obs, freq, se, cnv_type, samp_size, study]
+		subprocess.call("$ANNOTSV/bin/AnnotSV -SVinputFile {} -SVinputInfo 1 -outputFile {}".format(all_sv_bed_name, annotated), shell=True)
 
-		with open(decipher_pop_bed_name, "w") as out_f:
-			for interval in cnv_freq.iterkeys():
-				out_f.write("\t".join(interval))
+		with open(annotated, "r") as f:
 
-		all_sv_bed = self.BedTool_make_all_sv(tmp_all_sv_bed_name)
-		pop_bed = BedTool(decipher_pop_bed_name)
+			next(f) #skip header
+
+			for line in f:
+				field = line.rstrip('\n').replace(',', ';').split('\t')
+				if field[4] == "full":
+
+					sv = self.all_ref_interval_data[(field[0], field[1], field[2])]
+
+					sv.dgv_gain_id = field[13]
+					sv.dgv_gain_n_samples_with_sv = field[14]
+					sv.dgv_gain_n_samples_tested = field[15]
+					sv.dgv_gain_freq = field[16]
+
+					sv.dgv_loss_id = field[17]
+					sv.dgv_loss_n_samples_with_sv = field[18]
+					sv.dgv_loss_n_samples_tested = field[19]
+					sv.dgv_loss_freq = field[20]
+
+					sv.ddd_sv = field[21]
+					sv.ddd_dup_n_samples_with_sv = field[22]
+					sv.ddd_dup_freq = field[23]
+					sv.ddd_del_n_samples_with_sv =field[24]
+					sv.ddd_del_freq = field[25]
+
+					sv.GCcontent_left = field[41]
+					sv.GCcontent_right = field[42]
+
+					sv.TADcoord = field[47]
+					sv.ENCODEexperiments = field[48]
+
+		os.remove(all_sv_bed_name)
+		os.remove(annotated)
 
 	def write_results(self, outfile_name):
 		'''
@@ -216,12 +252,12 @@ class StructuralVariantRecords:
 			for key in sorted(self.grouped_sv.iterkeys()):
 
 				chr, start, end = key
-				ref_interval = self.all_ref_interval_data[key]
+				ref = self.all_ref_interval_data[key]
 
 				index, isthere = self.make_sample_list_index(self.grouped_sv[key])
 				nsamples = str(len(self.grouped_sv[key]))
 				svtype = self.get_longest_svtype(self.grouped_sv[key])
 				samp_details = self.make_sample_details(self.grouped_sv[key])
 
-				out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref_interval.gene, svtype, ref_interval.svlen, ref_interval.svmax, ref_interval.svsum, ref_interval.svtop5, ref_interval.svtop10, ref_interval.svmean, ref_interval.dgv, ref_interval.exons_spanned, ref_interval.make_decipher_link()]), ",".join(isthere), ",".join(samp_details))
+				out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref.gene, svtype, ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ref.ddd_sv, ref.ddd_dup_n_samples_with_sv, ref.ddd_dup_freq, ref.ddd_del_n_samples_with_sv, ref.ddd_del_freq, ref.GCcontent_left, ref.GCcontent_right, ref.TADcoord, ref.ENCODEexperiments]), ",".join(isthere), ",".join(samp_details))
 				out.write(out_line)

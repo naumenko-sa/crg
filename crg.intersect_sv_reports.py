@@ -151,6 +151,7 @@ def main(exon_bed, outfile_name, input_files, decipher_population, decipher_path
 				make_bed_file(leftover_sv, new_bed) # store all leftover_sv in tmp dir for processing in next pass
 
 	all_sv_records.calc_exons_spanned(exon_bed)
+	all_sv_records.run_annotsv()
 	all_sv_records.write_results(outfile_name)
 
 if __name__ == '__main__':
@@ -186,6 +187,6 @@ if __name__ == '__main__':
 	parser.add_argument('-i', nargs='+', help='Input file names including .sv.csv extension, e.g. -i 180_230.sv.csv 180_231.sv.csv', required=True)
 	args = parser.parse_args()
 
-	print('crg.sv.merge_family.py started processing on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
+	print('crg.intersect_sv_reports.py started processing on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
 	main(args.exon_bed, args.o, args.i, args.decipher_population, args.decipher_pathogenic)
-	print('crg.sv.merge_family.py finished on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
+	print('crg.intersect_sv_reports.py finished on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
