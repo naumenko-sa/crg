@@ -15,6 +15,9 @@ or for multiple projects create list of projects in projects.txt and run\
 where N = number of projects in the current dir.
 5. `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
+## AnnotSV
+[AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
+
 ## Individual sample report columns:
 - CHR
 - POS
