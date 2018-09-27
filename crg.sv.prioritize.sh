@@ -52,9 +52,6 @@ then
 			 -i $sample.pass.region.vcf > $sample.pass.region.svscore.vcf
 fi
 
-if [ -n "$dgv" ]
-then
-    echo "Generating final report: " `date`
-    crg.sv.parse.py $sample.pass.region.svscore.vcf $dgv > $sample.sv.csv
-fi
-
+#generating final report with or without dgv
+echo "Generating final report: " `date`
+crg.sv.parse.py $sample.pass.region.svscore.vcf $dgv > $sample.sv.csv
