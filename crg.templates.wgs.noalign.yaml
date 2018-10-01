@@ -1,15 +1,16 @@
 details:
 - algorithm:
-    aligner: bwa
+    aligner: false
+    bam_clean: remove_extracontigs
     effects: vep
     effects_transcripts: all
     ensemble:
       numpass: 2
       use_filtered: false
-    realign: true
-    recalibrate: true
-    remove_lcr: false
-    mark_duplicates: true
+    realign: false
+    recalibrate: false
+    remove_lcr: true
+    mark_duplicates: false
     save_diskspace: true
     svcaller: [lumpy, manta, cnvkit, metasv, wham]
     tools_on:

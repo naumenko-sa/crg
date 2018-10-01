@@ -19,6 +19,8 @@ where N = number of projects in the current dir.
 [AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
 
 ## Individual sample report columns:
+=======
+# Report columns:
 - CHR
 - POS
 - GT

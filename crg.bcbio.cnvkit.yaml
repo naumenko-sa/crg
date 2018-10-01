@@ -1,0 +1,33 @@
+details:
+- algorithm:
+    aligner: false
+    effects: vep
+    effects_transcripts: all
+    realign: false
+    recalibrate: false
+    remove_lcr: true
+    mark_duplicates: false
+    save_diskspace: true
+    svcaller:
+    - cnvkit
+    tools_on:
+    - svplots
+    - qualimap
+    - vep_splice_annotations
+    - noalt_calling
+    variantcaller: false
+  analysis: variant2
+  description: '912R_A337376'
+  files:
+  - /hpf/largeprojects/ccmbio/naumenko/validation/venter/input/venter_89931_1.fq.gz
+  - /hpf/largeprojects/ccmbio/naumenko/validation/venter/input/venter_89931_2.fq.gz
+  genome_build: GRCh37
+resources:
+  default:
+    cores: 7
+    jvm_opts:
+    - -Xms750m
+    - -Xmx7000m
+    memory: 7G
+upload:
+  dir: ../final
