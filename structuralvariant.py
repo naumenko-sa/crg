@@ -47,14 +47,6 @@ class StructuralVariant:
 		self.ddd_del_n_samples_with_sv = ""
 		self.ddd_del_freq = ""
 
-		#AnnotSV - GC Content
-		self.GCcontent_left = ""
-		self.GCcontent_right = ""
-
-		#AnnotSV - TAD annotations (Topologically Associating Domains)
-		self.TADcoord = ""
-		self.ENCODEexperiments = ""
-
 	def make_decipher_link(self):
 		return '=hyperlink("https://decipher.sanger.ac.uk/browser#q/{}:{}-{}")'.format(self.chr, self.start, self.end)
 
@@ -134,7 +126,7 @@ class StructuralVariantRecords:
 
 	def make_header(self):
 
-		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK", "DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", "DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", "DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", "GCcontent_left", "GCcontent_right", "TADcoordinates", "ENCODEexperiments"]
+		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK", "DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", "DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", "DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency"]
 		header = ",".join(fields)
 
 		for s in self.sample_list:
@@ -232,12 +224,6 @@ class StructuralVariantRecords:
 					sv.ddd_del_n_samples_with_sv =field[24]
 					sv.ddd_del_freq = field[25]
 
-					sv.GCcontent_left = field[41]
-					sv.GCcontent_right = field[42]
-
-					sv.TADcoord = field[47]
-					sv.ENCODEexperiments = field[48]
-
 		os.remove(all_sv_bed_name)
 		os.remove(annotated)
 
@@ -259,5 +245,5 @@ class StructuralVariantRecords:
 				svtype = self.get_longest_svtype(self.grouped_sv[key])
 				samp_details = self.make_sample_details(self.grouped_sv[key])
 
-				out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref.gene, svtype, ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ref.ddd_sv, ref.ddd_dup_n_samples_with_sv, ref.ddd_dup_freq, ref.ddd_del_n_samples_with_sv, ref.ddd_del_freq, ref.GCcontent_left, ref.GCcontent_right, ref.TADcoord, ref.ENCODEexperiments]), ",".join(isthere), ",".join(samp_details))
+				out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref.gene, svtype, ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ref.ddd_sv, ref.ddd_dup_n_samples_with_sv, ref.ddd_dup_freq, ref.ddd_del_n_samples_with_sv, ref.ddd_del_freq]), ",".join(isthere), ",".join(samp_details))
 				out.write(out_line)

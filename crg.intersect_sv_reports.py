@@ -2,6 +2,7 @@ import os
 import csv
 import sys
 import argparse
+import shutil
 
 from datetime import datetime
 from pybedtools import BedTool
@@ -105,6 +106,13 @@ def parse_csv(sample_csv, column_data):
 
 				column_data[key] = newSV
 
+def cleanup(tmp_bed, tmp_dir):
+	for f in tmp_bed:
+		os.remove(f)
+
+	for d in tmp_dir:
+		shutil.rmtree(d)
+
 def main(exon_bed, outfile_name, input_files, decipher_population, decipher_pathogenic):
 	'''
 		Loop over input files performing bedtools intersect to get a grouping of intervals.
@@ -116,6 +124,8 @@ def main(exon_bed, outfile_name, input_files, decipher_population, decipher_path
 	sample_list = csv2bed(input_files)
 	all_sv_records = StructuralVariantRecords(sample_list)
 	all_column_data = {}
+	tmp_dir = []
+	tmp_bed = []
 
 	for i, s in enumerate(sample_list):
 
@@ -127,6 +137,7 @@ def main(exon_bed, outfile_name, input_files, decipher_population, decipher_path
 
 		if i != len(sample_list)-1: # if not on last sample, create folder for input files in next processing pass
 			next_dir = "pass_{}/".format(str(i+1))
+			tmp_dir.append(next_dir)
 
 			try:
 				os.mkdir(next_dir)
@@ -153,6 +164,8 @@ def main(exon_bed, outfile_name, input_files, decipher_population, decipher_path
 	all_sv_records.calc_exons_spanned(exon_bed)
 	all_sv_records.run_annotsv()
 	all_sv_records.write_results(outfile_name)
+
+	cleanup([s + '.bed' for s in sample_list], tmp_dir)
 
 if __name__ == '__main__':
 	'''
