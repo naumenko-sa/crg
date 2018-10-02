@@ -44,7 +44,7 @@ crg.intersect_sv_reports.py is a script which groups then annotates structural v
 
 Grouping is useful when analyzing families as most structural variants should be similar and conserved across samples. The criteria for grouping is defined as a minimum of a 50% recipricol overlap with an arbitrary "reference" interval. This criteria gaurentees that grouped structural variants are of similar size and position.
 
-Annotation is largely accomplished by using a tool called [AnnotSV](http://lbgi.fr/AnnotSV/) made by [Véronique Geoffroy](https://www.researchgate.net/profile/Veronique_Geoffroy2). DGV, DDD, GC, TAD and ENCODE columns come directly from AnnotSV.
+Annotation is largely accomplished by using a tool called [AnnotSV](http://lbgi.fr/AnnotSV/) made by [Véronique Geoffroy](https://www.researchgate.net/profile/Veronique_Geoffroy2). DGV, DDD columns come directly from AnnotSV.
 Information on each of these columns can be found on the [AnnotSV website](http://lbgi.fr/AnnotSV/annotations).
 
 The script produces a CSV file which can be analyzed using spreadsheet software.
@@ -68,10 +68,6 @@ Includes all of the columns above, except SOURCES, NUM_SVTOOLS, SVTYPE and ANN, 
 - DDD_DUP_Frequency
 - DDD_DEL_n_samples_with_SV
 - DDD_DEL_Frequency
-- GCcontent_left
-- GCcontent_right
-- TADcoordinates
-- ENCODEexperiments
 - SAMPLENAME: does this sample have an overlapping SV in it? (0,1)
 - SAMPLENAME_details: what are the SV's in this sample which overlap with the reference?
 
