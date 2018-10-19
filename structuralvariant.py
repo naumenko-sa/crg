@@ -47,6 +47,9 @@ class StructuralVariant:
 		self.ddd_del_n_samples_with_sv = ""
 		self.ddd_del_freq = ""
 
+		#AnnotSV - OMIM fields
+		self.omim = []
+
 	def make_decipher_link(self):
 		return '=hyperlink("https://decipher.sanger.ac.uk/browser#q/{}:{}-{}")'.format(self.chr, self.start, self.end)
 
@@ -55,6 +58,9 @@ class StructuralVariant:
 
 	def interval(self):
 		return '{}:{}-{}:{}'.format(self.chr, self.start, self.end, self.svtype)
+
+	def make_omim_column(self):
+		return ';'.join(self.omim)
 
 class StructuralVariantRecords:
 
@@ -126,7 +132,7 @@ class StructuralVariantRecords:
 
 	def make_header(self):
 
-		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK", "DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", "DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", "DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency"]
+		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK", "DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", "DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", "DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", "OMIM {GENE-MIM#-INHERITANCE-DESCRIPTION};"]
 		header = ",".join(fields)
 
 		for s in self.sample_list:
@@ -204,10 +210,8 @@ class StructuralVariantRecords:
 
 			for line in f:
 				field = line.rstrip('\n').replace(',', ';').split('\t')
+				sv = self.all_ref_interval_data[(field[0], field[1], field[2])]
 				if field[4] == "full":
-
-					sv = self.all_ref_interval_data[(field[0], field[1], field[2])]
-
 					sv.dgv_gain_id = field[13]
 					sv.dgv_gain_n_samples_with_sv = field[14]
 					sv.dgv_gain_n_samples_tested = field[15]
@@ -223,6 +227,23 @@ class StructuralVariantRecords:
 					sv.ddd_dup_freq = field[23]
 					sv.ddd_del_n_samples_with_sv =field[24]
 					sv.ddd_del_freq = field[25]
+				elif field[4] == "split":
+					# parse gene info for omim annotations
+					gene = field[5]
+					mim_number = field[38]
+					phenotypes = field[39]
+					inheritance = field[40]
+
+					if gene.isspace():
+						gene="NA_GENE"
+					if mim_number.isspace():
+						mim_number="NA_MIM"
+					if phenotypes.isspace():
+						phenotypes="NA_PHENO"
+					if inheritance.isspace():
+						inheritance="NA_INHERIT"
+
+					sv.omim.append('{%s}' % ('-'.join([gene, mim_number, inheritance, phenotypes])))
 
 		os.remove(all_sv_bed_name)
 		os.remove(annotated)
@@ -245,5 +266,5 @@ class StructuralVariantRecords:
 				svtype = self.get_longest_svtype(self.grouped_sv[key])
 				samp_details = self.make_sample_details(self.grouped_sv[key])
 
-				out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref.gene, svtype, ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ref.ddd_sv, ref.ddd_dup_n_samples_with_sv, ref.ddd_dup_freq, ref.ddd_del_n_samples_with_sv, ref.ddd_del_freq]), ",".join(isthere), ",".join(samp_details))
+				out_line = '{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref.gene, svtype, ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ref.ddd_sv, ref.ddd_dup_n_samples_with_sv, ref.ddd_dup_freq, ref.ddd_del_n_samples_with_sv, ref.ddd_del_freq, ref.make_omim_column()]), ",".join(isthere), ",".join(samp_details))
 				out.write(out_line)
