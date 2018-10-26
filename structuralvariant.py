@@ -288,23 +288,22 @@ class StructuralVariantRecords:
 		for sv in self.all_ref_interval_data.values():
 			svtype = sv.svtype
 
-			for gene in sv.gene.replace('&', ';').split(';'):
+			for gene in set(sv.gene.replace('&', ';').split(';')): #set ensures uniqueness, the same gene don't get querried twice
 				if gene.isspace() or len(gene) == 0:
 					continue
 
 				if svtype == "DEL":
 					cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSDEL WHERE GENE=?', (gene, ) )
-					sv.hgmd_gross_deletion = decode(cur.fetchall())
+					sv.hgmd_gross_deletion.extend(decode(cur.fetchall()))
 				elif svtype == "INS":
 					cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSINS WHERE GENE=? AND TYPE=?', (gene, 'I'))
-					sv.hgmd_gross_insertion = decode(cur.fetchall())
+					sv.hgmd_gross_insertion.extend(decode(cur.fetchall()))
 				elif svtype == "DUP":
 					cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSINS WHERE GENE=? AND TYPE=?', (gene, 'D'))
-					sv.hgmd_gross_duplication = decode(cur.fetchall())
+					sv.hgmd_gross_duplication.extend(decode(cur.fetchall()))
 
-				#query COMPLEX for all svtypes
 				cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM COMPLEX WHERE GENE=?', (gene, ))
-				sv.hgmd_complex = decode(cur.fetchall())
+				sv.hgmd_complex.extend(decode(cur.fetchall()))
 
 		conn.close()
 
