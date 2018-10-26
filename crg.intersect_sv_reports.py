@@ -3,7 +3,6 @@ import csv
 import sys
 import argparse
 import shutil
-
 from datetime import datetime
 from pybedtools import BedTool
 from structuralvariant import StructuralVariant, StructuralVariantRecords
@@ -113,7 +112,7 @@ def cleanup(tmp_bed, tmp_dir):
 	for d in tmp_dir:
 		shutil.rmtree(d)
 
-def main(exon_bed, outfile_name, input_files, decipher_population, decipher_pathogenic):
+def main(exon_bed, hgmd_db, outfile_name, input_files):
 	'''
 		Loop over input files performing bedtools intersect to get a grouping of intervals.
 		Intervals which do not meet overlapping criteria are stored in a bed file in a pass_# folder for
@@ -161,8 +160,7 @@ def main(exon_bed, outfile_name, input_files, decipher_population, decipher_path
 				new_bed = next_dir + sample_list[j] + ".bed"
 				make_bed_file(leftover_sv, new_bed) # store all leftover_sv in tmp dir for processing in next pass
 
-	all_sv_records.calc_exons_spanned(exon_bed)
-	all_sv_records.run_annotsv()
+	all_sv_records.annotate(exon_bed, hgmd_db)
 	all_sv_records.write_results(outfile_name)
 
 	cleanup([s + '.bed' for s in sample_list], tmp_dir)
@@ -193,13 +191,12 @@ if __name__ == '__main__':
 		python crg.intersect_sv_reports.py -exon_bed="protein_coding_genes.exons.bed" -o="180.sv.family.csv" -i 180_123.sv.csv 180_444.sv.csv
 	'''
 	parser = argparse.ArgumentParser(description='Generates a structural variant report in CSV format for clincal research')
-	parser.add_argument('-exon_bed', default="/home/dennis.kao/gene_panels/protein_coding_genes.exons.fixed.sorted.bed", help='BED file containing fixed exon positions')
-	parser.add_argument('-decipher_population', help='TSV file containing population CNVs frequencies from Decipher\'s internal database')
-	parser.add_argument('-decipher_pathogenic', help='TSV file containing deleterious CNVs data from Decipher\'s internal database')
+	parser.add_argument('-exon_bed', default="/home/dennis.kao/gene_panels/protein_coding_genes.exons.fixed.sorted.bed", help='BED file containing fixed exon positions', required=True)
+	parser.add_argument('-hgmd', help='Path to hgmd_pro.db file', required=True, type=str)
 	parser.add_argument('-o', help='Output file name e.g. -o 180.sv.family.csv', required=True, type=str)
 	parser.add_argument('-i', nargs='+', help='Input file names including .sv.csv extension, e.g. -i 180_230.sv.csv 180_231.sv.csv', required=True)
 	args = parser.parse_args()
 
 	print('crg.intersect_sv_reports.py started processing on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
-	main(args.exon_bed, args.o, args.i, args.decipher_population, args.decipher_pathogenic)
+	main(args.exon_bed, args.hgmd, args.o, args.i)
 	print('crg.intersect_sv_reports.py finished on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
