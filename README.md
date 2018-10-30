@@ -70,9 +70,9 @@ Includes all of the columns above, except SOURCES, NUM_SVTOOLS, SVTYPE and ANN, 
 - misZ
 - pLI
 - HGMD_GROSS_INSERTION: gross (>20bp) insertion events in this gene that have been observed in HGMD, format {GENE|DISEASE|TAG|DESCRIPTION|COMMENTS|JOURNAL|AUTHOR|YEAR|PMID}
-- HGMD_GROSS_DUPLICATION: gross (>20bp) duplication events in this gene that have been observed in HGMD
-- HGMD_GROSS_DELETION: gross (>20bp) deletion events in this gene that have been observed in HGMD
-- HGMD_COMPLEX_VARIATION: complex variants (combination of indels, translocations, SNP, fusions, inversions) in this gene that have been observed in HGMD
+- HGMD_GROSS_DUPLICATION: gross duplication events in this gene that have been observed in HGMD
+- HGMD_GROSS_DELETION: gross deletion events in this gene that have been observed in HGMD
+- HGMD_COMPLEX_VARIATION: complex variantions (combination of indels, translocations, SNP, fusions, inversions) in this gene that have been observed in HGMD
 - SAMPLENAME: does this sample have an overlapping SV in it? (0,1)
 - SAMPLENAME_details: what are the SV's in this sample which overlap with the reference?
 
