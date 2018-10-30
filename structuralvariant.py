@@ -61,6 +61,7 @@ class StructuralVariant:
 		self.hgmd_gross_duplication = []
 		self.hgmd_gross_insertion = []
 		self.hgmd_complex = []
+		self.is_gene_in_hgmd = {}
 
 	def make_decipher_link(self):
 		return '=hyperlink("https://decipher.sanger.ac.uk/browser#q/{}:{}-{}")'.format(self.chr, self.start, self.end)
@@ -110,7 +111,13 @@ class StructuralVariantRecords:
 		self.grouped_sv[ref_interval][samp_name].append(column_data[new_interval])
 
 	def make_header(self):
-		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK", "DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", "DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", "DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", "OMIM {GENE MIM# INHERITANCE DESCRIPTION};", "synZ", "misZ", "pLI", "HGMD_GROSS_INSERTION", "HGMD_GROSS_DUPLICATION", "HGMD_GROSS_DELETION", "HGMD_COMPLEX_VARIATION"]
+		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", \
+		"SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK", \
+		"DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", \
+		 "DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", \
+		  "DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", "OMIM {GENE MIM# INHERITANCE DESCRIPTION};", \
+		   "synZ", "misZ", "pLI", "GENE_IN_HGMD", "HGMD_GROSS_INSERTION", "HGMD_GROSS_DUPLICATION", "HGMD_GROSS_DELETION", "HGMD_COMPLEX_VARIATION"]
+
 		header = ",".join(fields)
 
 		for s in self.sample_list:
@@ -130,75 +137,6 @@ class StructuralVariantRecords:
 				f.write('{}\t{}\t{}\t{}.\n'.format(sv[0], sv[1], sv[2], bed_name))
 
 		return BedTool(bed_name)
-
-	def calc_exons_spanned(self, exon_bed):
-		'''
-			Populates the field: exons_spanned for all reference intervals
-		'''
-		tmp_bed_name = "tmp_interval.bed"
-		tmp_all_sv_bed_name = "tmp_all_sv.bed"
-
-		exon_ref = BedTool(exon_bed)
-		sample = self.all_sv_BedTool(tmp_all_sv_bed_name)
-
-		for interval in sample:
-
-			chr, start, end, gene = interval
-
-			# create a temp bed file with 1 line - the interval of interest
-			with open(tmp_bed_name, "w") as f:
-				f.write('{}\t{}\t{}\n'.format(chr, start, end))
-
-			tmp_bed = BedTool(tmp_bed_name)
-			self.all_ref_interval_data[(chr, start, end)].exons_spanned = str(tmp_bed.intersect(exon_ref).count())
-
-		os.remove(tmp_bed_name)
-		os.remove(tmp_all_sv_bed_name)
-
-	def annotsv(self):
-		'''
-		Handles DGV, DDD and OMIM annotations
-		'''
-		all_sv_bed_name = "all_sv.bed"
-		annotated = "./{}.annotated.tsv".format(all_sv_bed_name)
-		all_sv = self.all_sv_BedTool(all_sv_bed_name)
-
-		subprocess.call("$ANNOTSV/bin/AnnotSV -SVinputFile {} -SVinputInfo 1 -outputFile {}".format(all_sv_bed_name, annotated), shell=True)
-
-		with open(annotated, "r") as f:
-
-			next(f) #skip header
-
-			for line in f:
-				field = line.rstrip('\n').replace(',', ';').split('\t')
-				sv = self.all_ref_interval_data[(field[0], field[1], field[2])]
-				if field[4] == "full":
-					sv.dgv_gain_id = field[13]
-					sv.dgv_gain_n_samples_with_sv = field[14]
-					sv.dgv_gain_n_samples_tested = field[15]
-					sv.dgv_gain_freq = field[16]
-
-					sv.dgv_loss_id = field[17]
-					sv.dgv_loss_n_samples_with_sv = field[18]
-					sv.dgv_loss_n_samples_tested = field[19]
-					sv.dgv_loss_freq = field[20]
-
-					sv.ddd_sv = field[21]
-					sv.ddd_dup_n_samples_with_sv = field[22]
-					sv.ddd_dup_freq = field[23]
-					sv.ddd_del_n_samples_with_sv =field[24]
-					sv.ddd_del_freq = field[25]
-				elif field[4] == "split":
-					# gene info for omim annotations
-					sv.add_omim(field[5], field[38], field[40], field[39]) # gene, mim_number, phenotypes, inheritance
-
-					# pli scores, identical for each sv interval
-					sv.synz = field[34]
-					sv.misz = field[35]
-					sv.pli = field[36]
-
-		os.remove(all_sv_bed_name)
-		os.remove(annotated)
 
 	def write_results(self, outfile_name):
 		'''
@@ -260,8 +198,10 @@ class StructuralVariantRecords:
 
 			return longest_svtype
 
-		with open(outfile_name, "wb") as out:
+		def hgmd_gene_index(gene_dict):
+			return u"; ".join(["{}: {}".format(gene, present) for gene, present in gene_dict.items()])
 
+		with open(outfile_name, "wb") as out:
 			out.write(self.make_header())
 
 			for key in sorted(self.grouped_sv.iterkeys()):
@@ -274,40 +214,111 @@ class StructuralVariantRecords:
 				svtype = get_longest_svtype(self.grouped_sv[key])
 				samp_details = make_sample_details(self.sample_list, self.grouped_sv[key])
 
-				out_line = u'{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref.gene, svtype, ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ref.ddd_sv, ref.ddd_dup_n_samples_with_sv, ref.ddd_dup_freq, ref.ddd_del_n_samples_with_sv, ref.ddd_del_freq, ref.make_omim_column(), ref.synz, ref.misz, ref.pli, ref.make_hgmd_column(ref.hgmd_gross_insertion), ref.make_hgmd_column(ref.hgmd_gross_duplication), ref.make_hgmd_column(ref.hgmd_gross_deletion), ref.make_hgmd_column(ref.hgmd_complex)]), ",".join(isthere), ",".join(samp_details))
+				out_line = u'{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref.gene, svtype, ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ref.ddd_sv, ref.ddd_dup_n_samples_with_sv, ref.ddd_dup_freq, ref.ddd_del_n_samples_with_sv, ref.ddd_del_freq, ref.make_omim_column(), ref.synz, ref.misz, ref.pli, hgmd_gene_index(ref.is_gene_in_hgmd), ref.make_hgmd_column(ref.hgmd_gross_insertion), ref.make_hgmd_column(ref.hgmd_gross_duplication), ref.make_hgmd_column(ref.hgmd_gross_deletion), ref.make_hgmd_column(ref.hgmd_complex)]), ",".join(isthere), ",".join(samp_details))
 				out.write(out_line.encode("UTF-8"))
 
-	def hgmd(self, db_path):
-
-		def decode(rows):
-			return [ u'|'.join(["NA" if field is None else str(field) if isinstance(field,int) else field.replace(',', '') for field in entry ]) for entry in rows ]
-
-		conn = sqlite3.connect(db_path)
-		cur = conn.cursor()
-
-		for sv in self.all_ref_interval_data.values():
-			svtype = sv.svtype
-
-			for gene in set(sv.gene.replace('&', ';').split(';')): #set ensures uniqueness, the same gene don't get querried twice
-				if gene.isspace() or len(gene) == 0:
-					continue
-
-				if svtype == "DEL":
-					cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSDEL WHERE GENE=?', (gene, ) )
-					sv.hgmd_gross_deletion.extend(decode(cur.fetchall()))
-				elif svtype == "INS":
-					cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSINS WHERE GENE=? AND TYPE=?', (gene, 'I'))
-					sv.hgmd_gross_insertion.extend(decode(cur.fetchall()))
-				elif svtype == "DUP":
-					cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSINS WHERE GENE=? AND TYPE=?', (gene, 'D'))
-					sv.hgmd_gross_duplication.extend(decode(cur.fetchall()))
-
-				cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM COMPLEX WHERE GENE=?', (gene, ))
-				sv.hgmd_complex.extend(decode(cur.fetchall()))
-
-		conn.close()
-
 	def annotate(self, exon_bed, hgmd_db):
-		self.calc_exons_spanned(exon_bed)
-		self.annotsv()
-		self.hgmd(hgmd_db)
+		def calc_exons_spanned(exon_bed):
+			'''
+				Populates the field: exons_spanned for all reference intervals
+			'''
+			tmp_bed_name = "tmp_interval.bed"
+			tmp_all_sv_bed_name = "tmp_all_sv.bed"
+
+			exon_ref = BedTool(exon_bed)
+			sample = self.all_sv_BedTool(tmp_all_sv_bed_name)
+
+			for interval in sample:
+
+				chr, start, end, gene = interval
+
+				# create a temp bed file with 1 line - the interval of interest
+				with open(tmp_bed_name, "w") as f:
+					f.write('{}\t{}\t{}\n'.format(chr, start, end))
+
+				tmp_bed = BedTool(tmp_bed_name)
+				self.all_ref_interval_data[(chr, start, end)].exons_spanned = str(tmp_bed.intersect(exon_ref).count())
+
+			os.remove(tmp_bed_name)
+			os.remove(tmp_all_sv_bed_name)
+
+		def annotsv():
+			'''
+			Handles DGV, DDD and OMIM annotations
+			'''
+			all_sv_bed_name = "all_sv.bed"
+			annotated = "./{}.annotated.tsv".format(all_sv_bed_name)
+			all_sv = self.all_sv_BedTool(all_sv_bed_name)
+
+			subprocess.call("$ANNOTSV/bin/AnnotSV -SVinputFile {} -SVinputInfo 1 -outputFile {}".format(all_sv_bed_name, annotated), shell=True)
+
+			with open(annotated, "r") as f:
+
+				next(f) #skip header
+
+				for line in f:
+					field = line.rstrip('\n').replace(',', ';').split('\t')
+					sv = self.all_ref_interval_data[(field[0], field[1], field[2])]
+					if field[4] == "full":
+						sv.dgv_gain_id = field[13]
+						sv.dgv_gain_n_samples_with_sv = field[14]
+						sv.dgv_gain_n_samples_tested = field[15]
+						sv.dgv_gain_freq = field[16]
+
+						sv.dgv_loss_id = field[17]
+						sv.dgv_loss_n_samples_with_sv = field[18]
+						sv.dgv_loss_n_samples_tested = field[19]
+						sv.dgv_loss_freq = field[20]
+
+						sv.ddd_sv = field[21]
+						sv.ddd_dup_n_samples_with_sv = field[22]
+						sv.ddd_dup_freq = field[23]
+						sv.ddd_del_n_samples_with_sv =field[24]
+						sv.ddd_del_freq = field[25]
+					elif field[4] == "split":
+						# gene info for omim annotations
+						sv.add_omim(field[5], field[38], field[40], field[39]) # gene, mim_number, phenotypes, inheritance
+
+						# pli scores, identical for each sv interval
+						sv.synz = field[34]
+						sv.misz = field[35]
+						sv.pli = field[36]
+
+			os.remove(all_sv_bed_name)
+			os.remove(annotated)
+
+		def hgmd(db_path):
+			def decode(rows):
+				return [ u'|'.join(["NA" if field is None else str(field) if isinstance(field,int) else field.replace(',', '') for field in entry ]) for entry in rows ]
+
+			conn = sqlite3.connect(db_path)
+			cur = conn.cursor()
+
+			for sv in self.all_ref_interval_data.values():
+				svtype = sv.svtype
+
+				for gene in set(sv.gene.replace('&', ';').split(';')): #set ensures uniqueness, the same gene don't get querried twice
+					if gene.isspace() or len(gene) == 0:
+						continue
+
+					if svtype == "DEL":
+						cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSDEL WHERE GENE=?', (gene, ) )
+						sv.hgmd_gross_deletion.extend(decode(cur.fetchall()))
+					elif svtype == "INS":
+						cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSINS WHERE GENE=? AND TYPE=?', (gene, 'I'))
+						sv.hgmd_gross_insertion.extend(decode(cur.fetchall()))
+					elif svtype == "DUP":
+						cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSINS WHERE GENE=? AND TYPE=?', (gene, 'D'))
+						sv.hgmd_gross_duplication.extend(decode(cur.fetchall()))
+
+					cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM COMPLEX WHERE GENE=?', (gene, ))
+					sv.hgmd_complex.extend(decode(cur.fetchall()))
+
+					cur.execute('SELECT GENE FROM ALLGENES WHERE GENE=?', (gene, ))
+					sv.is_gene_in_hgmd[gene] = "0" if cur.fetchone() is None else "1"
+
+			conn.close()
+
+		calc_exons_spanned(exon_bed)
+		annotsv()
+		hgmd(hgmd_db)
