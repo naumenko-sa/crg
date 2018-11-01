@@ -4,7 +4,6 @@ import sqlite3
 from pybedtools import BedTool
 
 class StructuralVariant:
-
 	'''Simple class to hold column values'''
 
 	def __init__(self):
@@ -14,6 +13,7 @@ class StructuralVariant:
 		self.start = ""
 		self.end = ""
 		self.gene = ""
+		self.genotype = ""
 
 		#Custom implementation fields
 		self.exons_spanned = ""
@@ -60,7 +60,6 @@ class StructuralVariant:
 		self.hgmd_gross_deletion = []
 		self.hgmd_gross_duplication = []
 		self.hgmd_gross_insertion = []
-		self.hgmd_complex = []
 		self.is_gene_in_hgmd = {}
 
 	def make_decipher_link(self):
@@ -86,10 +85,10 @@ class StructuralVariantRecords:
 		Holds groupings of StructuralVariant.
 
 		Groupings in the dict grouped_sv follows this structure:
-			grouped_sv[ref_interval][samp_name]
+			grouped_sv[ref_interval][samp_name] = [StructuralVariant]
 
 		Additional information about the ref_interval used to group other sample intervals is stored in:
-			all_ref_interval_data[(chr, start, end)]
+			all_ref_interval_data[(chr, start, end)] = StructuralVariant
 	'''
 	def __init__(self, _sample_list):
 		self.grouped_sv = {}
@@ -114,9 +113,9 @@ class StructuralVariantRecords:
 		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", \
 		"SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK", \
 		"DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", \
-		 "DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", \
-		  "DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", "OMIM {GENE MIM# INHERITANCE DESCRIPTION};", \
-		   "synZ", "misZ", "pLI", "GENE_IN_HGMD", "HGMD_GROSS_INSERTION", "HGMD_GROSS_DUPLICATION", "HGMD_GROSS_DELETION", "HGMD_COMPLEX_VARIATION"]
+		"DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", \
+		"DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", "OMIM {GENE MIM# INHERITANCE DESCRIPTION};", \
+		"synZ", "misZ", "pLI", "GENE_IN_HGMD", "HGMD_GROSS_INSERTION", "HGMD_GROSS_DUPLICATION", "HGMD_GROSS_DELETION"]
 
 		header = ",".join(fields)
 
@@ -165,10 +164,7 @@ class StructuralVariantRecords:
 				Makes list for SAMPLENAME_details column
 				e.g. 1:10334731-10334817:DEL;1:10334769-10334833:DUP
 			'''
-			all_samp_details = []
-
 			for s in sample_list:
-
 				samp_details = []
 
 				if s in interval:
@@ -180,23 +176,20 @@ class StructuralVariantRecords:
 
 			return all_samp_details
 
-		def get_longest_svtype(samples_in_interval):
+		def make_sample_genotype_details(sample_list, interval):
+			return ["NA" if s not in interval.keys() else "HOM" if "HOM" in [variant.genotype for variant in interval.values()] else "HET" for s in sample_list]
+
+		def get_longest_svtype(interval):
 			'''
 				Determine the longest structural variant, then return its annotation
 			'''
-			longest = -1	#will always be overwritten on first loop iteration since we are using abs()
-			longest_svtype = ""
+			def svlen(type_len):
+				return abs(type_len[1])
 
-			for samp in samples_in_interval:
-				for variant in samples_in_interval[samp]:
+			svtype_and_svlen = [(variant.svtype, variant.svlen) for variant in interval.values()]
+			svtype_and_svlen.sort(key=svlen)
 
-					length = abs(int(variant.svlen))
-
-					if length > longest:
-						longest = length
-						longest_svtype = variant.svtype
-
-			return longest_svtype
+			return svtype_and_svlen[-1].svtype
 
 		def hgmd_gene_index(gene_dict):
 			return u"; ".join(["{}: {}".format(gene, present) for gene, present in gene_dict.items()])
@@ -214,7 +207,14 @@ class StructuralVariantRecords:
 				svtype = get_longest_svtype(self.grouped_sv[key])
 				samp_details = make_sample_details(self.sample_list, self.grouped_sv[key])
 
-				out_line = u'{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref.gene, svtype, ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ref.ddd_sv, ref.ddd_dup_n_samples_with_sv, ref.ddd_dup_freq, ref.ddd_del_n_samples_with_sv, ref.ddd_del_freq, ref.make_omim_column(), ref.synz, ref.misz, ref.pli, hgmd_gene_index(ref.is_gene_in_hgmd), ref.make_hgmd_column(ref.hgmd_gross_insertion), ref.make_hgmd_column(ref.hgmd_gross_duplication), ref.make_hgmd_column(ref.hgmd_gross_deletion), ref.make_hgmd_column(ref.hgmd_complex)]), ",".join(isthere), ",".join(samp_details))
+				out_line = u'{},{},{}\n'.format(",".join([str(chr), str(start), str(end), nsamples, index, ref.gene, svtype, \
+				ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), \
+				ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, \
+				ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ref.ddd_sv, ref.ddd_dup_n_samples_with_sv, \
+				ref.ddd_dup_freq, ref.ddd_del_n_samples_with_sv, ref.ddd_del_freq, ref.make_omim_column(), ref.synz, ref.misz, ref.pli,\
+				hgmd_gene_index(ref.is_gene_in_hgmd), ref.make_hgmd_column(ref.hgmd_gross_insertion), ref.make_hgmd_column(ref.hgmd_gross_duplication), \
+				ref.make_hgmd_column(ref.hgmd_gross_deletion)]), ",".join(isthere), ",".join(samp_details))
+
 				out.write(out_line.encode("UTF-8"))
 
 	def annotate(self, exon_bed, hgmd_db):
@@ -301,6 +301,11 @@ class StructuralVariantRecords:
 					if gene.isspace() or len(gene) == 0:
 						continue
 
+					# Is this gene in the HGMD database?
+					cur.execute('SELECT GENE FROM ALLGENES WHERE GENE=?', (gene, ))
+					sv.is_gene_in_hgmd[gene] = "0" if cur.fetchone() is None else "1"
+
+					# Look for solved cases in this gene involving structural variants 
 					if svtype == "DEL":
 						cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSDEL WHERE GENE=?', (gene, ) )
 						sv.hgmd_gross_deletion.extend(decode(cur.fetchall()))
@@ -310,12 +315,6 @@ class StructuralVariantRecords:
 					elif svtype == "DUP":
 						cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSINS WHERE GENE=? AND TYPE=?', (gene, 'D'))
 						sv.hgmd_gross_duplication.extend(decode(cur.fetchall()))
-
-					cur.execute('SELECT GENE, DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM COMPLEX WHERE GENE=?', (gene, ))
-					sv.hgmd_complex.extend(decode(cur.fetchall()))
-
-					cur.execute('SELECT GENE FROM ALLGENES WHERE GENE=?', (gene, ))
-					sv.is_gene_in_hgmd[gene] = "0" if cur.fetchone() is None else "1"
 
 			conn.close()
 

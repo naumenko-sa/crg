@@ -84,7 +84,7 @@ def parse_csv(sample_csv, column_data):
 			if not line:
 				continue
 
-			chr, start, gt, svtype, svlen, end, sources, nsvt, gene, ann, svmax, svsum, svtop5, svtop10, svmean, dgv = line			
+			chr, start, genotype, svtype, svlen, end, sources, nsvt, gene, ann, svmax, svsum, svtop5, svtop10, svmean, dgv = line			
 			key = (chr, start, end)
 
 			if key not in column_data:
@@ -92,6 +92,7 @@ def parse_csv(sample_csv, column_data):
 
 				newSV.chr = chr
 				newSV.start = start
+				newSV.genotype = genotype
 				newSV.svtype = svtype
 				newSV.svlen = svlen
 				newSV.end = end
@@ -172,20 +173,15 @@ if __name__ == '__main__':
 		Center for Computational Medicine, SickKids, Dennis Kao
 
 		Purpose: 
-				To group interval information across several samples and allow for analysis across a family/small population. In my work, intervals belong to the
-				regions of structural variants. 
+				To group SV's (structural variants) of similar location and size across several samples and allow for easier spreadsheet analysis across a cohort.
 		How to use: 
-				Navigate to a folder containing multiple .sv.csv files and launch the script. Then use Excel or some other spreadsheet software to filter the results.
+				Navigate to a folder containing multiple .sv.csv file and launch the script. Then use Excel or some other spreadsheet software to filter the results.
 		Output: 
-				CSV file containing grouped intervals and metadata.
-		Limitations: 
-				Script is IO bound because it relies on bedtools, a program which only operates on files. calc_exons_spanned() creates a file for each interval
-				being calculated and thus is the most costly function.
-
-				Actual run time is acceptable for my uses. Researchers looking to run this code on a large sample size (>50) may want to look in to using SSD's or RAMdisk.
-		
+				CSV file containing grouped intervals and annotated columns.
+		Limitations:
+				calc_exons_spanned() creates a file for each SV being calculated. Increases run-time by a minute or more.
 		Typical runtime:
-				<30 s for 2 samples
+				<30 s for <=2 samples
 				>3 mins for 4 - 8 samples
 		
 		python crg.intersect_sv_reports.py -exon_bed="protein_coding_genes.exons.bed" -o="180.sv.family.csv" -i 180_123.sv.csv 180_444.sv.csv
