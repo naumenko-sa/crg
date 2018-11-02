@@ -3,11 +3,42 @@ import subprocess
 import sqlite3
 from pybedtools import BedTool
 
+class GeneAnnotations:
+	def __init__(self):
+		self.gene = ""
+
+		#DDD fields
+		self.DDD_status = ""
+		self.DDD_mode = ""
+		self.DDD_consequence = ""
+		self.DDD_disease = ""
+		self.DDD_pmids = ""
+
+		#HGMD GROSS mutation fields
+		self.is_in_hgmd = ""
+		self.hgmd_disease = ""
+		self.hgmd_tag = ""
+		self.hgmd_description = ""
+		self.hgmd_comments = ""
+		self.hgmd_journal = ""
+		self.hgmd_author = ""
+		self.hgmd_year = ""
+		self.hgmd_pmid = ""
+
+		#OMIM fields
+		self.mim_num = ""
+		self.mim_inheritance = ""
+		self.mim_description = ""
+
+		#pLI scores
+		self.synz = ""
+		self.misz = ""
+		self.pli = ""
+
 class StructuralVariant:
 	'''Simple class to hold column values'''
 
 	def __init__(self):
-
 		#Standard BED fields
 		self.chr = ""
 		self.start = ""
@@ -87,7 +118,7 @@ class StructuralVariantRecords:
 		Groupings in the dict grouped_sv follows this structure:
 			grouped_sv[ref_interval][samp_name] = [StructuralVariant]
 
-		Additional information about the ref_interval used to group other sample intervals is stored in:
+		Annotated information on the ref_interval used to group sample intervals is stored in:
 			all_ref_interval_data[(chr, start, end)] = StructuralVariant
 	'''
 	def __init__(self, _sample_list):
@@ -100,7 +131,7 @@ class StructuralVariantRecords:
 			Adds new_interval to the dict under the key ref_interval
 			Column data relating to a ref_interval is stored as well
 		'''
-		if ref_interval not in self.grouped_sv.iterkeys():
+		if ref_interval not in self.grouped_sv.keys():
 			self.grouped_sv[ref_interval] = {}
 			self.all_ref_interval_data[ref_interval] = column_data[ref_interval]
 
@@ -116,26 +147,17 @@ class StructuralVariantRecords:
 		"DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", \
 		"DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", "OMIM {GENE MIM# INHERITANCE DESCRIPTION};", \
 		"synZ", "misZ", "pLI", "GENE_IN_HGMD", "HGMD_GROSS_INSERTION", "HGMD_GROSS_DUPLICATION", "HGMD_GROSS_DELETION"]
+		fields.extend(self.sample_list)
+		fields.extend(["%s_details" % s for s in self.sample_list])
+		return "%s\n" % ",".join(fields)
 
-		header = ",".join(fields)
-
-		for s in self.sample_list:
-			header = header + "," + s
-
-		for s in self.sample_list:
-			header = header + "," + "{}_details".format(s)
-
-		return header + "\n"
-
-	def all_sv_BedTool(self, bed_name):
+	def make_bed(self, bed_name):
 		'''
-			Creates a bed file containing all reference intervals and returns the corresponding BedTool instance
+			Creates a bed file containing all reference intervals
 		'''
 		with open(bed_name, "w") as f:
 			for sv in self.grouped_sv:
-				f.write('{}\t{}\t{}\t{}.\n'.format(sv[0], sv[1], sv[2], bed_name))
-
-		return BedTool(bed_name)
+				f.write('{}\t{}\t{}\t{}\n'.format(sv[0], sv[1], sv[2], bed_name))
 
 	def write_results(self, outfile_name):
 		'''
@@ -164,6 +186,7 @@ class StructuralVariantRecords:
 				Makes list for SAMPLENAME_details column
 				e.g. 1:10334731-10334817:DEL;1:10334769-10334833:DUP
 			'''
+			all_samp_details = []
 			for s in sample_list:
 				samp_details = []
 
@@ -177,27 +200,29 @@ class StructuralVariantRecords:
 			return all_samp_details
 
 		def make_sample_genotype_details(sample_list, interval):
-			return ["NA" if s not in interval.keys() else "HOM" if "HOM" in [variant.genotype for variant in interval.values()] else "HET" for s in sample_list]
+			return ["NA" if sample not in interval.keys() \
+			else "HOM" if "HOM" in [variant.genotype for variant in interval.values()] \
+			else "HET" \
+			for sample in sample_list]
 
 		def get_longest_svtype(interval):
 			'''
-				Determine the longest structural variant, then return its annotation
+				Populates LONGEST_SVTYPE column
 			'''
 			def svlen(type_len):
-				return abs(type_len[1])
+				return abs(int(type_len[1]))
 
-			svtype_and_svlen = [(variant.svtype, variant.svlen) for variant in interval.values()]
+			svtype_and_svlen = [(variant.svtype, variant.svlen) for sample in interval.values() for variant in sample]
 			svtype_and_svlen.sort(key=svlen)
-
-			return svtype_and_svlen[-1].svtype
+			return svtype_and_svlen[-1][0] #longest SV is last value in sorted list, hence [-1]
 
 		def hgmd_gene_index(gene_dict):
 			return u"; ".join(["{}: {}".format(gene, present) for gene, present in gene_dict.items()])
 
-		with open(outfile_name, "wb") as out:
+		with open(outfile_name, "w") as out:
 			out.write(self.make_header())
 
-			for key in sorted(self.grouped_sv.iterkeys()):
+			for key in sorted(self.grouped_sv.keys()):
 
 				chr, start, end = key
 				ref = self.all_ref_interval_data[key]
@@ -215,7 +240,7 @@ class StructuralVariantRecords:
 				hgmd_gene_index(ref.is_gene_in_hgmd), ref.make_hgmd_column(ref.hgmd_gross_insertion), ref.make_hgmd_column(ref.hgmd_gross_duplication), \
 				ref.make_hgmd_column(ref.hgmd_gross_deletion)]), ",".join(isthere), ",".join(samp_details))
 
-				out.write(out_line.encode("UTF-8"))
+				out.write(out_line)
 
 	def annotate(self, exon_bed, hgmd_db):
 		def calc_exons_spanned(exon_bed):
@@ -226,7 +251,8 @@ class StructuralVariantRecords:
 			tmp_all_sv_bed_name = "tmp_all_sv.bed"
 
 			exon_ref = BedTool(exon_bed)
-			sample = self.all_sv_BedTool(tmp_all_sv_bed_name)
+			self.make_bed(tmp_all_sv_bed_name)
+			sample = BedTool(tmp_all_sv_bed_name)
 
 			for interval in sample:
 
@@ -248,7 +274,7 @@ class StructuralVariantRecords:
 			'''
 			all_sv_bed_name = "all_sv.bed"
 			annotated = "./{}.annotated.tsv".format(all_sv_bed_name)
-			all_sv = self.all_sv_BedTool(all_sv_bed_name)
+			self.make_bed(all_sv_bed_name)
 
 			subprocess.call("$ANNOTSV/bin/AnnotSV -SVinputFile {} -SVinputInfo 1 -outputFile {}".format(all_sv_bed_name, annotated), shell=True)
 
@@ -297,7 +323,7 @@ class StructuralVariantRecords:
 			for sv in self.all_ref_interval_data.values():
 				svtype = sv.svtype
 
-				for gene in set(sv.gene.replace('&', ';').split(';')): #set ensures uniqueness, the same gene don't get querried twice
+				for gene in set(sv.gene.replace('&', ';').split(';')): #set ensures uniqueness - the same gene don't get querried twice
 					if gene.isspace() or len(gene) == 0:
 						continue
 
