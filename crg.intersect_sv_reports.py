@@ -5,7 +5,7 @@ import argparse
 import shutil
 from datetime import datetime
 from pybedtools import BedTool
-from structuralvariant import StructuralVariant, StructuralVariantRecords
+from structuralvariant import GeneAnnotations, StructuralVariant, StructuralVariantRecords
 
 csv.field_size_limit(sys.maxsize)
 
@@ -72,25 +72,13 @@ def parse_csv(sample_csv, column_data):
 			if not line:
 				continue
 
-			chr, start, genotype, svtype, svlen, end, sources, nsvt, gene, ann, svmax, svsum, svtop5, svtop10, svmean, dgv = line			
+			chr, start, genotype, svtype, svlen, end, sources, nsvt, genes, ann, svmax, svsum, svtop5, svtop10, svmean, dgv = line			
 			key = (chr, start, end)
 
 			if key not in column_data:
-				newSV = StructuralVariant()
-
-				newSV.chr = chr
-				newSV.start = start
-				newSV.genotype = genotype
-				newSV.svtype = svtype
-				newSV.svlen = svlen
-				newSV.end = end
-				newSV.gene = gene
-				newSV.svsum = svsum
-				newSV.svmax = svmax
-				newSV.svtop5 = svtop5
-				newSV.svtop10 = svtop10
-				newSV.svmean = svmean
-				newSV.dgv = dgv
+				newSV = StructuralVariant(chr, start, end, svtype, genotype, svlen, svsum, svmax, svtop5, svtop10, svmean, dgv)
+				for gene in set(genes.strip().resplit('[&;]+')): #set ensures uniqueness - the same gene doesn't get added twice
+					newSV.add_gene(gene)
 
 				column_data[key] = newSV
 
@@ -150,7 +138,7 @@ def main(exon_bed, hgmd_db, outfile_name, input_files):
 				make_bed_file(leftover_sv, new_bed) # store all leftover_sv in tmp dir for processing in next pass
 
 	all_sv_records.annotate(exon_bed, hgmd_db)
-	all_sv_records.write_results(outfile_name)
+	#all_sv_records.write_results(outfile_name)
 	cleanup(['%s.bed' % s for s in sample_list], tmp_dir)
 
 if __name__ == '__main__':
@@ -160,7 +148,8 @@ if __name__ == '__main__':
 		Center for Computational Medicine, SickKids, Dennis Kao
 
 		Purpose: 
-				To group SV's (structural variants) of similar location and size across several samples and allow for easier spreadsheet analysis across a cohort.
+				To group and annotate SV's (structural variants) of similar location and size across several samples.
+				Enables easier spreadsheet analysis across a cohort.
 		How to use: 
 				Navigate to a folder containing multiple .sv.csv file and launch the script. Then use Excel or some other spreadsheet software to filter the results.
 		Output: 
