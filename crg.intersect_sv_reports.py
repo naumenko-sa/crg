@@ -3,6 +3,7 @@ import csv
 import sys
 import argparse
 import shutil
+import re
 from datetime import datetime
 from pybedtools import BedTool
 from structuralvariant import GeneAnnotations, StructuralVariant, StructuralVariantRecords
@@ -68,7 +69,6 @@ def parse_csv(sample_csv, column_data):
 			return
 
 		for line in csv.reader(f, delimiter=",", quotechar="\""):
-
 			if not line:
 				continue
 
@@ -77,9 +77,9 @@ def parse_csv(sample_csv, column_data):
 
 			if key not in column_data:
 				newSV = StructuralVariant(chr, start, end, svtype, genotype, svlen, svsum, svmax, svtop5, svtop10, svmean, dgv)
-				for gene in set(genes.strip().resplit('[&;]+')): #set ensures uniqueness - the same gene doesn't get added twice
-					newSV.add_gene(gene)
-
+				for gene_name in set(re.split('[&;]+', genes.strip())): #set ensures uniqueness - the same gene doesn't get added twice
+					if gene_name:
+						newSV.add_gene(gene_name)
 				column_data[key] = newSV
 
 def main(exon_bed, hgmd_db, outfile_name, input_files):
@@ -102,7 +102,7 @@ def main(exon_bed, hgmd_db, outfile_name, input_files):
 	all_column_data = {}
 	tmp_dir = []
 
-	csv2bed(input_files)
+	csv2bed(sample_list)
 
 	for i, s in enumerate(sample_list):
 
@@ -138,8 +138,8 @@ def main(exon_bed, hgmd_db, outfile_name, input_files):
 				make_bed_file(leftover_sv, new_bed) # store all leftover_sv in tmp dir for processing in next pass
 
 	all_sv_records.annotate(exon_bed, hgmd_db)
-	#all_sv_records.write_results(outfile_name)
 	cleanup(['%s.bed' % s for s in sample_list], tmp_dir)
+	all_sv_records.write_results(outfile_name)
 
 if __name__ == '__main__':
 	'''
@@ -159,6 +159,11 @@ if __name__ == '__main__':
 		Typical runtime:
 				<30 s for <=2 samples
 				>3 mins for 4 - 8 samples
+		Requirements:
+			python 3.7 - needed since dictionary order is gaurenteed
+			pybedtools
+			sqlite3
+			unix file system
 		
 		python crg.intersect_sv_reports.py -exon_bed="protein_coding_genes.exons.bed" -o="180.sv.family.csv" -i 180_123.sv.csv 180_444.sv.csv
 	'''
