@@ -3,28 +3,28 @@ import csv
 import sys
 import argparse
 import shutil
+import re
 from datetime import datetime
 from pybedtools import BedTool
-from structuralvariant import StructuralVariant, StructuralVariantRecords
+from structuralvariant import GeneAnnotations, StructuralVariant, StructuralVariantRecords
 
 csv.field_size_limit(sys.maxsize)
 
 def group_sv(a_bed_name, b_bed_name, column_data, all_sv_records):
 	
 	'''
-		Groups intervals which overlap with a "reference" interval in sample a.
+		Groups SV's which overlap with a "reference" interval in sample a.
 
-		Overlapping is defined as: each interval overlaps each other by >= 50% of their respective length.
-		This gaurentees that grouping occurs when intervals are relatively the same size and overlap one another by a "significant" amount.
+		Overlapping is defined as: a recipricol overlap of >=50%.
+		This gaurentees grouping occurs between SV's of similar size and position.
 
 		Returns a BedTool instance containing all the intervals which did not meet the overlapping criteria.
 	'''
 
 	a_bed = BedTool(a_bed_name)
 	b_bed = BedTool(b_bed_name)
-	already_grouped_intervals = []
+	already_grouped_intervals = [] #list handles edge case where intervals within the same sample overlap one another. This can lead to an SV appearing in more than 1 grouping.
 
-	# Find all SVs in b_bed which overlap a SV in a_bed by >=50% and are overlapped by >=50% by the same SV in first_sample_bed
 	overlapping_sv = a_bed.intersect(b_bed, wa=True, wb=True, F=0.5, f=0.5)
 
 	for l in overlapping_sv:
@@ -42,23 +42,12 @@ def group_sv(a_bed_name, b_bed_name, column_data, all_sv_records):
 
 def csv2bed(input_files):
 	'''
-		Taken from Sergey's previous script - crg.sv.merge_family.sh
-		Converts each sample csv to a bed file using bash commands
-
-		Returns list of sample file names with extension removed
-	'''
-	sample_list = []
-
+		Taken from Sergey's script - crg.sv.merge_family.sh
+		Converts each sample csv to a bed file
+	'''	
 	for s in input_files:
-
-		if s.endswith('.sv.csv'):
-			s=s[:-7]
-
-		sample_list.append(s)
 		cmd = "cat {}.sv.csv | sed 1d | awk -F \'\",\"\' -v smpl={} \'{{print $1\"\\t\"$2\"\\t\"$6\"\\t\"smpl}}\' | sed s/\"\\\"\"// | sort -k1,1 -k2,2n > {}.bed".format(s, s, s)
 		os.popen(cmd)
-
-	return sample_list
 
 def make_bed_file(intervals, bed_dir):
 	'''
@@ -80,51 +69,40 @@ def parse_csv(sample_csv, column_data):
 			return
 
 		for line in csv.reader(f, delimiter=",", quotechar="\""):
-
 			if not line:
 				continue
 
-			chr, start, gt, svtype, svlen, end, sources, nsvt, gene, ann, svmax, svsum, svtop5, svtop10, svmean, dgv = line			
+			chr, start, genotype, svtype, svlen, end, sources, nsvt, genes, ann, svmax, svsum, svtop5, svtop10, svmean, dgv = line			
 			key = (chr, start, end)
 
 			if key not in column_data:
-				newSV = StructuralVariant()
-
-				newSV.chr = chr
-				newSV.start = start
-				newSV.svtype = svtype
-				newSV.svlen = svlen
-				newSV.end = end
-				newSV.gene = gene
-				newSV.svsum = svsum
-				newSV.svmax = svmax
-				newSV.svtop5 = svtop5
-				newSV.svtop10 = svtop10
-				newSV.svmean = svmean
-				newSV.dgv = dgv
-
+				newSV = StructuralVariant(chr, start, end, svtype, genotype, svlen, svsum, svmax, svtop5, svtop10, svmean, dgv)
+				for gene_name in set(re.split('[&;]+', genes.strip())): #set ensures uniqueness - the same gene doesn't get added twice
+					if gene_name:
+						newSV.add_gene(gene_name)
 				column_data[key] = newSV
-
-def cleanup(tmp_bed, tmp_dir):
-	for f in tmp_bed:
-		os.remove(f)
-
-	for d in tmp_dir:
-		shutil.rmtree(d)
 
 def main(exon_bed, hgmd_db, outfile_name, input_files):
 	'''
 		Loop over input files performing bedtools intersect to get a grouping of intervals.
 		Intervals which do not meet overlapping criteria are stored in a bed file in a pass_# folder for
-		the next loop iteration. In my experience, these files only contain < 10 lines/intervals.
+		the next loop iteration. In my experience, these files contain < 10 lines/intervals.
 
 		See group_sv() for more details on what is defined as "overlapping criteria" 
 	'''
-	sample_list = csv2bed(input_files)
+	def cleanup(tmp_bed, tmp_dir):
+		for f in tmp_bed:
+			os.remove(f)
+
+		for d in tmp_dir:
+			shutil.rmtree(d)
+
+	sample_list = [ sample[:-7] if sample.endswith('.sv.csv') else sample for sample in input_files ]
 	all_sv_records = StructuralVariantRecords(sample_list)
 	all_column_data = {}
 	tmp_dir = []
-	tmp_bed = []
+
+	csv2bed(sample_list)
 
 	for i, s in enumerate(sample_list):
 
@@ -143,13 +121,12 @@ def main(exon_bed, hgmd_db, outfile_name, input_files):
 			except OSError:
 				pass # if directory already exists, just use it
 
-		a_bed = current_dir + sample_list[i] + ".bed"
-		a_csv = sample_list[i] + ".sv.csv"
+		a_bed = "%s%s.bed" % (current_dir, s)
 
 		for j in range(i, len(sample_list)):
 
-			b_bed = current_dir + sample_list[j] + ".bed"
-			b_csv = sample_list[j] + ".sv.csv"
+			b_bed = "%s%s.bed" % (current_dir, sample_list[j])
+			b_csv = "%s.sv.csv" % sample_list[j]
 			parse_csv(b_csv, all_column_data)
 
 			# print("pass {}: {} {}".format(str(i), a_bed, b_bed) )
@@ -157,13 +134,12 @@ def main(exon_bed, hgmd_db, outfile_name, input_files):
 			leftover_sv = group_sv(a_bed, b_bed, all_column_data, all_sv_records)
 
 			if i != j:
-				new_bed = next_dir + sample_list[j] + ".bed"
+				new_bed = "%s%s.bed" % (next_dir, sample_list[j])
 				make_bed_file(leftover_sv, new_bed) # store all leftover_sv in tmp dir for processing in next pass
 
 	all_sv_records.annotate(exon_bed, hgmd_db)
+	cleanup(['%s.bed' % s for s in sample_list], tmp_dir)
 	all_sv_records.write_results(outfile_name)
-
-	cleanup([s + '.bed' for s in sample_list], tmp_dir)
 
 if __name__ == '__main__':
 	'''
@@ -172,21 +148,22 @@ if __name__ == '__main__':
 		Center for Computational Medicine, SickKids, Dennis Kao
 
 		Purpose: 
-				To group interval information across several samples and allow for analysis across a family/small population. In my work, intervals belong to the
-				regions of structural variants. 
+				To group and annotate SV's (structural variants) of similar location and size across several samples.
+				Enables easier spreadsheet analysis across a cohort.
 		How to use: 
-				Navigate to a folder containing multiple .sv.csv files and launch the script. Then use Excel or some other spreadsheet software to filter the results.
+				Navigate to a folder containing multiple .sv.csv file and launch the script. Then use Excel or some other spreadsheet software to filter the results.
 		Output: 
-				CSV file containing grouped intervals and metadata.
-		Limitations: 
-				Script is IO bound because it relies on bedtools, a program which only operates on files. calc_exons_spanned() creates a file for each interval
-				being calculated and thus is the most costly function.
-
-				Actual run time is acceptable for my uses. Researchers looking to run this code on a large sample size (>50) may want to look in to using SSD's or RAMdisk.
-		
+				CSV file containing grouped intervals and annotated columns.
+		Limitations:
+				calc_exons_spanned() creates a file for each SV being calculated. Increases run-time by a minute or more.
 		Typical runtime:
-				<30 s for 2 samples
+				<30 s for <=2 samples
 				>3 mins for 4 - 8 samples
+		Requirements:
+			python 3.7 - needed since dictionary order is gaurenteed
+			pybedtools
+			sqlite3
+			unix file system
 		
 		python crg.intersect_sv_reports.py -exon_bed="protein_coding_genes.exons.bed" -o="180.sv.family.csv" -i 180_123.sv.csv 180_444.sv.csv
 	'''
