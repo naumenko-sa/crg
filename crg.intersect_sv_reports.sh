@@ -8,8 +8,11 @@
 TODAY=`date +%Y-%m-%d`
 FAMILY_ID=$1
 OUT=${FAMILY_ID}.wgs.sv.${TODAY}.csv
-HGMD=${HOME}/gene_data/hgmd/hgmd_pro.db
-EXON_BED=${HOME}/gene_data/protein_coding_genes.exons.fixed.sorted.bed
+
+if [[ "$OSTYPE" == "linux"* ]]; then
+	HGMD=${HOME}/gene_data/HGMD_2018/hgmd_pro.db
+	EXON_BED=${HOME}/gene_data/protein_coding_genes.exons.fixed.sorted.bed
+fi
 
 if [ ! $2 ]; then
 	IN_FILES=`ls *.sv.csv | tr '\n' ' '`
