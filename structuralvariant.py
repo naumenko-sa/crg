@@ -3,30 +3,6 @@ import subprocess
 import sqlite3
 from pybedtools import BedTool
 
-def make_column_from_list(column_data):
-	def isListEmpty(inList):
-		#Returns true if inList contains some combination of empty nested lists and/or empty strings
-		#Taken and modified from: https://stackoverflow.com/questions/1593564/python-how-to-check-if-a-nested-list-is-essentially-empty
-		if isinstance(inList, list): # is a list
-			return all( map(isListEmpty, inList) )
-		elif isinstance(inList, str) and not inList: # is an empty string
-			return True
-		elif isinstance(inList, str) and inList: # is a non-empty string
-			return False
-		else:
-			raise ValueError("Heterogenous list containing data elements other than list or str detected! Raw data: %s" % str(inList))
-
-	if isListEmpty(column_data):
-		return "NA"
-	elif all(isinstance(i, list) for i in column_data): #nested list
-		return ';'.join(['|'.join([data if data else "NA" for data in gene_data]) if any(gene_data) \
-		else "NA" \
-		for gene_data in column_data])
-	elif all(isinstance(i, str) for i in column_data): #all strs
-		return ';'.join([data if data \
-		else "NA" \
-		for data in column_data])
-
 class GeneAnnotations:
 	def __init__(self, gene_name):
 		self.gene_name = gene_name
@@ -134,33 +110,55 @@ class StructuralVariant:
 		else:
 			raise ValueError('Attempted to add %s twice to %s' % (gene_name, self.make_interval_string()))
 
-	def make_hgmd_gene_list(self):
-		return make_column_from_list([gene.gene_name for gene in self.genes.values() if gene.is_in_hgmd])
-
 	def make_gene_list(self):
 		return ';'.join([gene for gene in self.genes])
 
+	def make_column_from_list(self, column_data):
+		def isListEmpty(inList):
+			#Returns true if inList contains some combination of empty nested lists and/or empty strings
+			#Taken and modified from: https://stackoverflow.com/questions/1593564/python-how-to-check-if-a-nested-list-is-essentially-empty
+			if isinstance(inList, list): # is a list
+				return all( map(isListEmpty, inList) )
+			elif isinstance(inList, str) and not inList: # is an empty string
+				return True
+			elif isinstance(inList, str) and inList: # is a non-empty string
+				return False
+			else:
+				raise ValueError("Heterogenous list containing data elements other than list or str detected! Raw data: %s" % str(inList))
+
+		if isListEmpty(column_data):
+			return "NA"
+		elif all(isinstance(i, list) for i in column_data): #nested list
+			return ';'.join(['|'.join([data if data else "NA" for data in gene_data]) if any(gene_data) \
+			else "NA" \
+			for gene_data in column_data])
+		elif all(isinstance(i, str) for i in column_data): #all strs
+			return ';'.join([data if data \
+			else "NA" \
+			for data in column_data])
+
+	def make_hgmd_gene_list(self):
+		return self.make_column_from_list([gene.gene_name for gene in self.genes.values() if gene.is_in_hgmd])
+
 	def make_gene_mim_columns(self):
 		#return mim_num, mim_inheritance, mim_phenotype
-		return make_column_from_list([gene.mim_num for gene in self.genes.values()]), \
-		make_column_from_list([gene.mim_inheritance for gene in self.genes.values()]), \
-		make_column_from_list([gene.mim_phenotype for gene in self.genes.values()])
+		return self.make_column_from_list([gene.mim_num for gene in self.genes.values()]), \
+		self.make_column_from_list([gene.mim_inheritance for gene in self.genes.values()]), \
+		self.make_column_from_list([gene.mim_phenotype for gene in self.genes.values()])
 
 	def make_gene_hgmd_columns(self):
 		#return disease, tag, description, comments, journal_info
-		journal_list = [gene.group_journal_fields() for gene in self.genes.values()]
-
-		return make_column_from_list([gene.hgmd_disease for gene in self.genes.values()]), \
-		make_column_from_list([gene.hgmd_tag for gene in self.genes.values()]), \
-		make_column_from_list([gene.hgmd_description for gene in self.genes.values()]), \
-		make_column_from_list([gene.hgmd_comments for gene in self.genes.values()]), \
-		make_column_from_list(journal_list)
+		return self.make_column_from_list([gene.hgmd_disease for gene in self.genes.values()]), \
+		self.make_column_from_list([gene.hgmd_tag for gene in self.genes.values()]), \
+		self.make_column_from_list([gene.hgmd_description for gene in self.genes.values()]), \
+		self.make_column_from_list([gene.hgmd_comments for gene in self.genes.values()]), \
+		self.make_column_from_list([gene.group_journal_fields() for gene in self.genes.values()])
 
 	def make_pli_columns(self):
 		#return pli, misz, synz
-		return make_column_from_list([ gene.pli for gene in self.genes.values() ]), \
-		make_column_from_list([ gene.misz for gene in self.genes.values() ]), \
-		make_column_from_list([ gene.synz for gene in self.genes.values() ])
+		return self.make_column_from_list([ gene.pli for gene in self.genes.values() ]), \
+		self.make_column_from_list([ gene.misz for gene in self.genes.values() ]), \
+		self.make_column_from_list([ gene.synz for gene in self.genes.values() ])
 
 	def make_ddd_columns(self):
 		#return self.ddd_sv, self.ddd_dup_n_samples_with_sv, self.ddd_dup_freq, self.ddd_del_n_samples_with_sv, self.ddd_del_freq
@@ -291,6 +289,7 @@ class StructuralVariantRecords:
 			'''
 				Populates the field: exons_spanned for all reference intervals
 			'''
+
 			tmp_bed_name = "tmp_interval.bed"
 			tmp_all_sv_bed_name = "tmp_all_sv.bed"
 
@@ -394,6 +393,9 @@ class StructuralVariantRecords:
 			conn.close()
 
 		# Annotation order is that of shortest run-time for faster testing
+		print('Querrying HGMD ...')
 		hgmd(hgmd_db)
+		print('Running AnnotSV for DDD, DGV, OMIM, PLI columns')
 		annotsv()
+		print('Calculating exons spanned ...')
 		calc_exons_spanned(exon_bed)
