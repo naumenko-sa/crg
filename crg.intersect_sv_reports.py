@@ -104,6 +104,7 @@ def main(exon_bed, hgmd_db, outfile_name, input_files):
 
 	csv2bed(sample_list)
 
+	print("Grouping like structural variants ...")
 	for i, s in enumerate(sample_list):
 
 		current_dir = ""
@@ -139,6 +140,7 @@ def main(exon_bed, hgmd_db, outfile_name, input_files):
 
 	all_sv_records.annotate(exon_bed, hgmd_db)
 	cleanup(['%s.bed' % s for s in sample_list], tmp_dir)
+	print('Writing results to file ...')
 	all_sv_records.write_results(outfile_name)
 
 if __name__ == '__main__':
