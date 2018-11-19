@@ -74,7 +74,7 @@ class StructuralVariant:
 		self.genes = {}
 
 		# Custom implementation
-		self.exons_spanned = "-1"
+		self.exons_spanned = 0
 
 		#AnnotSV - DGV Fields
 		self.dgv_gain_id = "NA"
@@ -213,6 +213,9 @@ class StructuralVariantRecords:
 			for sv in self.grouped_sv:
 				f.write('{}\t{}\t{}\t{}\n'.format(sv[0], sv[1], sv[2], bed_name))
 
+	def all_ref_BedTool(self):
+		return BedTool([sv for sv in self.all_ref_interval_data.keys()])
+
 	def write_results(self, outfile_name):
 		'''
 			A lot of string manipulation to generate the final CSV file line by line
@@ -275,7 +278,7 @@ class StructuralVariantRecords:
 				genes = ref.make_gene_list()
 
 				out_line = u'{},{},{},{}\n'.format(",".join([str(chr), str(start), str(end), n_samples, sample_list_index, n_genes, genes, svtype, \
-				ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, ref.exons_spanned, ref.make_decipher_link(), \
+				ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, str(ref.exons_spanned), ref.make_decipher_link(), \
 				ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, \
 				ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ddd_sv, ddd_dup_n_samples_with_sv, \
 				ddd_dup_freq, ddd_del_n_samples_with_sv, ddd_del_freq, n_mim_genes, mim_num, mim_inheritance, mim_phenotype, synz, misz, pli, \
@@ -289,30 +292,14 @@ class StructuralVariantRecords:
 			'''
 				Populates the field: exons_spanned for all reference intervals
 			'''
-
-			tmp_bed_name = "tmp_interval.bed"
-			tmp_all_sv_bed_name = "tmp_all_sv.bed"
-
 			exon_ref = BedTool(exon_bed)
-			self.make_bed(tmp_all_sv_bed_name)
-			sample = BedTool(tmp_all_sv_bed_name)
-
-			for interval in sample:
-				chr, start, end, gene = interval
-
-				# create a temp bed file with 1 line - the interval of interest
-				with open(tmp_bed_name, "w") as f:
-					f.write('{}\t{}\t{}\n'.format(chr, start, end))
-
-				tmp_bed = BedTool(tmp_bed_name)
-				self.all_ref_interval_data[(chr, start, end)].exons_spanned = str(tmp_bed.intersect(exon_ref).count())
-
-			os.remove(tmp_bed_name)
-			os.remove(tmp_all_sv_bed_name)
+			all_ref_sv = self.all_ref_BedTool()
+			for interval in all_ref_sv.intersect(exon_ref, wa=True):
+				self.all_ref_interval_data[str(interval.chrom), str(interval.start), str(interval.stop)].exons_spanned += 1
 
 		def annotsv():
 			'''
-			Handles DGV, DDD and OMIM annotations
+				Handles DGV, DDD and OMIM annotations
 			'''
 			all_sv_bed_name = "all_sv.bed"
 			annotated = "./{}.annotated.tsv".format(all_sv_bed_name)
@@ -392,7 +379,6 @@ class StructuralVariantRecords:
 
 			conn.close()
 
-		# Annotation order is that of shortest run-time for faster testing
 		print('Querrying HGMD ...')
 		hgmd(hgmd_db)
 		print('Running AnnotSV for DDD, DGV, OMIM, PLI columns')
