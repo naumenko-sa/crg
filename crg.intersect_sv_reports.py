@@ -21,11 +21,8 @@ csv.field_size_limit(sys.maxsize)
 			Navigate to a folder containing multiple .sv.csv file and launch the script. Then use Excel or some other spreadsheet software to filter the results.
 	Output:
 			CSV file containing grouped intervals and annotated columns.
-	Limitations:
-			Annotating the number of exons spanned (calc_exons_spanned()) takes a while to run.
 	Typical runtime on 2012 Macbook Pro i5 3210M, 8GB DDR3-1600:
-				<30 s for <=2 samples
-				>3 mins for 4 - 8 samples
+				<30s
 	Requirements:
 			Python 3
 			pybedtools
@@ -64,6 +61,7 @@ def parse_sample_csv(sample_csv, column_data):
 		Returns a bedtools instance containing all intervals within a sample.
 	'''
 	intervals = []
+	sample_name = sample_csv[:-7] if sample_csv.endswith(".sv.csv") else sample_csv
 	with open(sample_csv) as f:
 		try: # skip the header
 			next(f)
@@ -74,7 +72,7 @@ def parse_sample_csv(sample_csv, column_data):
 			if line:
 				chr, start, genotype, svtype, svlen, end, sources, nsvt, genes, ann, svmax, svsum, svtop5, svtop10, svmean, dgv = line			
 				key = (chr, start, end)
-				intervals.append((chr, start, end, sample_csv[:-7]))
+				intervals.append((chr, start, end, sample_name))
 				if key not in column_data:
 					newSV = StructuralVariant(chr, start, end, svtype, genotype, svlen, svsum, svmax, svtop5, svtop10, svmean, dgv)
 					for gene_name in set(re.split('[&;]+', genes.strip())): #set ensures uniqueness - the same gene doesn't get added twice
