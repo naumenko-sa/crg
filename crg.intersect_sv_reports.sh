@@ -6,11 +6,16 @@
 #PBS -l vmem=5g,mem=5g
 
 TODAY=`date +%Y-%m-%d`
+if [ -z $1 ]; then
+	echo "Specify family ID as first arguement to script"
+	exit
+fi
 FAMILY_ID=$1
 OUT=${FAMILY_ID}.wgs.sv.${TODAY}.csv
 
 HGMD=${HOME}/gene_data/HGMD_2018/hgmd_pro.db
 EXON_BED=${HOME}/gene_data/protein_coding_genes.exons.fixed.sorted.bed
+HPO=${HOME}/gene_data/HPO_2018/${FAMILY_ID}_HPO.txt
 
 if [ ! $2 ]; then
 	IN_FILES=`ls *.sv.csv | tr '\n' ' '`
@@ -25,8 +30,8 @@ elif [[ "$OSTYPE" == "linux"* ]]; then
 	PY=python
 fi
 
-echo "${PY} ${HOME}/crg/crg.intersect_sv_reports.py -exon_bed=${EXON_BED} -hgmd=${HGMD} -o=${OUT} -i ${IN_FILES}"
-${PY} ${HOME}/crg/crg.intersect_sv_reports.py -exon_bed=${EXON_BED} -hgmd=${HGMD} -o=${OUT} -i ${IN_FILES}
+echo "${PY} ${HOME}/crg/crg.intersect_sv_reports.py -exon_bed=${EXON_BED} -hgmd=${HGMD} -hpo=${HPO} -o=${OUT} -i ${IN_FILES}"
+${PY} ${HOME}/crg/crg.intersect_sv_reports.py -exon_bed=${EXON_BED} -hgmd=${HGMD} -hpo=${HPO} -o=${OUT} -i ${IN_FILES}
 
 if [[ "$OSTYPE" == *"darwin"* ]]; then
 	open -a 'Microsoft Excel' ${OUT}

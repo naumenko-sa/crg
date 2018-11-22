@@ -81,7 +81,6 @@ class StructuralVariant:
 		self.dgv_gain_n_samples_with_sv = "NA"
 		self.dgv_gain_n_samples_tested = "NA"
 		self.dgv_gain_freq = "NA"
-
 		self.dgv_loss_id = "NA"
 		self.dgv_loss_n_samples_with_sv = "NA"
 		self.dgv_loss_n_samples_tested = "NA"
@@ -93,6 +92,9 @@ class StructuralVariant:
 		self.ddd_dup_freq = ""
 		self.ddd_del_n_samples_with_sv = ""
 		self.ddd_del_freq = ""
+
+		#PhenomeCentral HPO Terms
+		self.hpo_terms = []
 
 	def make_decipher_link(self):
 		return '=hyperlink("https://decipher.sanger.ac.uk/browser#q/{}:{}-{}")'.format(self.chr, self.start, self.end)
@@ -164,6 +166,12 @@ class StructuralVariant:
 		#return self.ddd_sv, self.ddd_dup_n_samples_with_sv, self.ddd_dup_freq, self.ddd_del_n_samples_with_sv, self.ddd_del_freq
 		return [column if column else "NA" for column in [self.ddd_sv, self.ddd_dup_n_samples_with_sv, self.ddd_dup_freq, self.ddd_del_n_samples_with_sv, self.ddd_del_freq]]
 
+	def make_HPO_columns(self):
+		unique_terms = list({term for gene in self.genes.values() for term in gene.hpo_terms})
+		return str(len(unique_terms)), \
+		self.make_column_from_list(unique_terms), \
+		self.make_column_from_list([gene.gene_name for gene in self.genes.values() if gene.hpo_terms])
+
 class StructuralVariantRecords:
 	'''
 		Holds groupings of StructuralVariant.
@@ -190,19 +198,20 @@ class StructuralVariantRecords:
 
 		if samp_name not in self.grouped_sv[ref_interval]:
 			self.grouped_sv[ref_interval][samp_name] = []
-
 		self.grouped_sv[ref_interval][samp_name].append(column_data[new_interval])
 
 	def make_header(self):
-		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "N_GENES", "GENES", "LONGEST_SVTYPE", "SVLEN", "SVSCORE_MAX", \
-		"SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN", "DGV", "EXONS_SPANNED", "DECIPHER_LINK", \
-		"DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", \
-		"DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "DDD_SV", "DDD_DUP_n_samples_with_SV", \
-		"DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", "N_GENES_IN_OMIM", "OMIM_MIM_NUMBER", "OMIM_INHERITANCE", "OMIM_PHENOTYPE", \
-		"synZ", "misZ", "pLI", "GENES_IN_HGMD", "HGMD_DISEASE", "HGMD_TAG", "HGMD_DESCRIPTION", "HGMD_COMMENTS", "HGMD_JOURNAL_INFO"]
+		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "N_GENES", "GENES", "LONGEST_SVTYPE", "GENES_IN_HPO", \
+		"N_UNIQUE_HPO_TERMS", "UNIQUE_HPO_TERMS", "N_GENES_IN_OMIM", "MIM_NUMBER", "OMIM_INHERITANCE", "OMIM_PHENOTYPE", \
+		"DGV", "DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", \
+		"DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "SVLEN", "EXONS_SPANNED", "DECIPHER_LINK", \
+		"DDD_SV", "DDD_DUP_n_samples_with_SV", \
+		"DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", \
+		"synZ", "misZ", "pLI", "GENES_IN_HGMD", "HGMD_SV_DISEASE", "HGMD_SV_TAG", "HGMD_SV_DESCRIPTION", "HGMD_SV_COMMENTS", "HGMD_SV_JOURNAL_INFO" ]
 		fields.extend(self.sample_list)
 		fields.extend(["%s_SV_details" % s for s in self.sample_list])
 		fields.extend(["%s_genotype" % s for s in self.sample_list])
+		fields.extend(["SVSCORE_MAX", "SVSCORE_SUM", "SVSCORE_TOP5", "SVSCORE_TOP10", "SVSCORE_MEAN"])
 		return "%s\n" % ",".join(fields)
 
 	def make_bed(self, bed_name):
@@ -276,18 +285,23 @@ class StructuralVariantRecords:
 				hgmd_disease, hgmd_tag, hgmd_description, hgmd_comments, hgmd_journal_info = ref.make_gene_hgmd_columns()
 				mim_num, mim_inheritance, mim_phenotype = ref.make_gene_mim_columns()
 				genes = ref.make_gene_list()
+				#HPO
+				n_unique_hpo_terms, unique_hpo_terms, genes_in_HPO_panel = ref.make_HPO_columns()
 
-				out_line = u'{},{},{},{}\n'.format(",".join([str(chr), str(start), str(end), n_samples, sample_list_index, n_genes, genes, svtype, \
-				ref.svlen, ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean, ref.dgv, str(ref.exons_spanned), ref.make_decipher_link(), \
-				ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, \
-				ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, ddd_sv, ddd_dup_n_samples_with_sv, \
-				ddd_dup_freq, ddd_del_n_samples_with_sv, ddd_del_freq, n_mim_genes, mim_num, mim_inheritance, mim_phenotype, synz, misz, pli, \
-				ref.make_hgmd_gene_list(), hgmd_disease, hgmd_tag, hgmd_description, hgmd_comments, hgmd_journal_info]), \
-				sample_list_isthere_index, samp_sv_details, samp_genotype_details)
+				out_line = '%s\n' % ','.join([str(chr), str(start), str(end), n_samples, sample_list_index, n_genes, genes, svtype, \
+				genes_in_HPO_panel, n_unique_hpo_terms, unique_hpo_terms, n_mim_genes, mim_num, mim_inheritance, mim_phenotype, \
+				ref.dgv, ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, \
+				ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, \
+				ref.svlen, str(ref.exons_spanned), ref.make_decipher_link(), \
+				ddd_sv, ddd_dup_n_samples_with_sv, ddd_dup_freq, ddd_del_n_samples_with_sv, ddd_del_freq, \
+				synz, misz, pli, \
+				ref.make_hgmd_gene_list(), hgmd_disease, hgmd_tag, hgmd_description, hgmd_comments, hgmd_journal_info, \
+				sample_list_isthere_index, samp_sv_details, samp_genotype_details, \
+				ref.svmax, ref.svsum, ref.svtop5, ref.svtop10, ref.svmean ])
 
 				out.write(out_line)
 
-	def annotate(self, exon_bed, hgmd_db):
+	def annotate(self, exon_bed, hgmd_db, hpo):
 		def calc_exons_spanned(exon_bed):
 			'''
 				Populates the field: exons_spanned for all reference intervals
@@ -378,6 +392,17 @@ class StructuralVariantRecords:
 						gene_anno.is_in_hgmd = False
 
 			conn.close()
+		
+		def hpo_terms(hpo):
+			ontology = {}
+			with open(hpo) as f:
+				for line in f:
+					fields = line.strip('\n').split('\t')
+					gene, features = fields[0], fields[3]
+					ontology[gene] = [feat for feat in features.split('; ')]
+			for ref_interval in self.all_ref_interval_data.values():
+				for gene_name, gene_annots in ref_interval.genes.items():
+					gene_annots.hpo_terms = ontology[gene_name] if gene_name in ontology.keys() else []
 
 		print('Querrying HGMD ...')
 		hgmd(hgmd_db)
@@ -385,3 +410,5 @@ class StructuralVariantRecords:
 		annotsv()
 		print('Calculating exons spanned ...')
 		calc_exons_spanned(exon_bed)
+		print('Adding HPO terms ...')
+		hpo_terms(hpo)
