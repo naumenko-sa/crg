@@ -70,10 +70,12 @@ def parse_sample_csv(sample_csv, column_data):
 
 		for line in csv.reader(f, delimiter=",", quotechar="\""):
 			if line:
+
 				chr, start, genotype, svtype, svlen, end, sources, nsvt, genes, ann, svmax, svsum, svtop5, svtop10, svmean, dgv = line	
 				dgv = "0" if dgv == "NA" else dgv		
 				key = (chr, start, end)
 				intervals.append((chr, start, end, sample_name))
+				
 				if key not in column_data:
 					newSV = StructuralVariant(chr, start, end, svtype, genotype, svlen, svsum, svmax, svtop5, svtop10, svmean, dgv)
 					for gene_name in set(re.split('[&;]+', genes.strip())): #set ensures uniqueness - the same gene doesn't get added twice
@@ -83,7 +85,7 @@ def parse_sample_csv(sample_csv, column_data):
 
 	return BedTool(intervals)
 
-def main(exon_bed, hgmd_db, hpo, outfile_name, input_files):
+def main(exon_bed, hgmd_db, hpo, exac, omim, outfile_name, input_files):
 	'''
 		Loop over input files performing bedtools intersect to get a grouping of intervals.
 		See group_sv() for more details on what is defined as "overlapping criteria".
@@ -104,19 +106,21 @@ def main(exon_bed, hgmd_db, hpo, outfile_name, input_files):
 		if next_pass: passes.append(next_pass) #keep on processing if there are ungrouped SVs
 
 	print('Annotating structural variants ...')
-	all_sv_records.annotate(exon_bed, hgmd_db, hpo)
+	all_sv_records.annotate(exon_bed, hgmd_db, hpo, exac, omim)
 	print('Writing results to file ...')
 	all_sv_records.write_results(outfile_name)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Generates a structural variant report in CSV format for clincal research')
 	parser.add_argument('-exon_bed', default="/home/dennis.kao/gene_panels/protein_coding_genes.exons.fixed.sorted.bed", help='BED file containing fixed exon positions', required=True)
-	parser.add_argument('-hgmd', help='HGMD_Pro database file', required=True, type=str)
+	parser.add_argument('-hgmd', help='HGMD Pro database file', required=True, type=str)
 	parser.add_argument('-hpo', help='Tab delimited file containing gene names and HPO terms', type=str)
+	parser.add_argument('-exac', help='ExAC tab delimited file containing gene names and scores', type=str, required=True)
+	parser.add_argument('-omim', help='OMIM tab delimited file containing gene names and scores', type=str, required=True)
 	parser.add_argument('-o', help='Output file name e.g. -o 180.sv.family.csv', required=True, type=str)
 	parser.add_argument('-i', nargs='+', help='Input file names including .sv.csv extension, e.g. -i 180_230.sv.csv 180_231.sv.csv', required=True)
 	args = parser.parse_args()
 
 	print('crg.intersect_sv_reports.py started processing on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
-	main(args.exon_bed, args.hgmd, args.hpo, args.o, args.i)
+	main(args.exon_bed, args.hgmd, args.hpo, args.exac, args.omim, args.o, args.i)
 	print('crg.intersect_sv_reports.py finished on ' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))

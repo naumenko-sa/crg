@@ -16,6 +16,8 @@ OUT=${FAMILY_ID}.wgs.sv.${TODAY}.csv
 HGMD=${HOME}/gene_data/HGMD_2018/hgmd_pro.db
 EXON_BED=${HOME}/gene_data/protein_coding_genes.exons.fixed.sorted.bed
 HPO=${HOME}/gene_data/HPO_2018/${FAMILY_ID}_HPO.txt
+EXAC=${HOME}/gene_data/ExAC/fordist_cleaned_nonpsych_z_pli_rec_null_data.txt
+OMIM=${HOME}/gene_data/OMIM_2018-11-01/genemap2.txt
 
 if [ ! $2 ]; then
 	IN_FILES=`ls *.sv.csv | tr '\n' ' '`
@@ -30,8 +32,8 @@ elif [[ "$OSTYPE" == "linux"* ]]; then
 	PY=python
 fi
 
-echo "${PY} ${HOME}/crg/crg.intersect_sv_reports.py -exon_bed=${EXON_BED} -hgmd=${HGMD} -hpo=${HPO} -o=${OUT} -i ${IN_FILES}"
-${PY} ${HOME}/crg/crg.intersect_sv_reports.py -exon_bed=${EXON_BED} -hgmd=${HGMD} -hpo=${HPO} -o=${OUT} -i ${IN_FILES}
+echo "${PY} ${HOME}/crg/crg.intersect_sv_reports.py -exon_bed=${EXON_BED} -hgmd=${HGMD} -hpo=${HPO} -exac=${EXAC} -omim=${OMIM} -o=${OUT} -i ${IN_FILES}"
+${PY} ${HOME}/crg/crg.intersect_sv_reports.py -exon_bed=${EXON_BED} -hgmd=${HGMD} -hpo=${HPO} -exac=${EXAC} -omim=${OMIM} -o=${OUT} -i ${IN_FILES}
 
 if [[ "$OSTYPE" == *"darwin"* ]]; then
 	open -a 'Microsoft Excel' ${OUT}

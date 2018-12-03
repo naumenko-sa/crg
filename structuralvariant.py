@@ -1,6 +1,9 @@
 import os
 import subprocess
 import sqlite3
+import numpy as np
+import pandas as pd
+import re
 from pybedtools import BedTool
 
 class GeneAnnotations:
@@ -34,6 +37,9 @@ class GeneAnnotations:
 		self.synz = ""
 		self.misz = ""
 		self.pli = ""
+
+		#PhenomeCentral HPO Terms
+		self.hpo_terms = []
 
 	def add_hgmd_anno(self, hgmd_annots):
 		for row in hgmd_annots:
@@ -92,9 +98,6 @@ class StructuralVariant:
 		self.ddd_dup_freq = ""
 		self.ddd_del_n_samples_with_sv = ""
 		self.ddd_del_freq = ""
-
-		#PhenomeCentral HPO Terms
-		self.hpo_terms = []
 
 	def make_decipher_link(self):
 		return '=hyperlink("https://decipher.sanger.ac.uk/browser#q/{}:{}-{}")'.format(self.chr, self.start, self.end)
@@ -201,10 +204,10 @@ class StructuralVariantRecords:
 		self.grouped_sv[ref_interval][samp_name].append(column_data[new_interval])
 
 	def make_header(self):
-		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "N_GENES", "GENES", "LONGEST_SVTYPE", "GENES_IN_HPO", \
+		fields = ["CHR", "START", "END", "N_SAMPLES", "LIST", "EXONS_SPANNED", "N_GENES", "GENES", "LONGEST_SVTYPE", "GENES_IN_HPO", \
 		"N_UNIQUE_HPO_TERMS", "UNIQUE_HPO_TERMS", "N_GENES_IN_OMIM", "MIM_NUMBER", "OMIM_INHERITANCE", "OMIM_PHENOTYPE", \
 		"DGV", "DGV_GAIN_IDs", "DGV_GAIN_n_samples_with_SV", "DGV_GAIN_n_samples_tested", "DGV_GAIN_Frequency", "DGV_LOSS_IDs", \
-		"DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "SVLEN", "EXONS_SPANNED", "DECIPHER_LINK", \
+		"DGV_LOSS_n_samples_with_SV", "DGV_LOSS_n_samples_tested", "DGV_LOSS_Frequency", "SVLEN", "DECIPHER_LINK", \
 		"DDD_SV", "DDD_DUP_n_samples_with_SV", \
 		"DDD_DUP_Frequency", "DDD_DEL_n_samples_with_SV", "DDD_DEL_Frequency", \
 		"synZ", "misZ", "pLI", "GENES_IN_HGMD", "HGMD_SV_DISEASE", "HGMD_SV_TAG", "HGMD_SV_DESCRIPTION", "HGMD_SV_COMMENTS", "HGMD_SV_JOURNAL_INFO" ]
@@ -288,11 +291,11 @@ class StructuralVariantRecords:
 				#HPO
 				n_unique_hpo_terms, unique_hpo_terms, genes_in_HPO_panel = ref.make_HPO_columns()
 
-				out_line = '%s\n' % ','.join([str(chr), str(start), str(end), n_samples, sample_list_index, n_genes, genes, svtype, \
+				out_line = '%s\n' % ','.join([str(chr), str(start), str(end), n_samples, sample_list_index, str(ref.exons_spanned), n_genes, genes, svtype, \
 				genes_in_HPO_panel, n_unique_hpo_terms, unique_hpo_terms, n_mim_genes, mim_num, mim_inheritance, mim_phenotype, \
 				ref.dgv, ref.dgv_gain_id, ref.dgv_gain_n_samples_with_sv, ref.dgv_gain_n_samples_tested, ref.dgv_gain_freq, ref.dgv_loss_id, \
 				ref.dgv_loss_n_samples_with_sv, ref.dgv_loss_n_samples_tested, ref.dgv_loss_freq, \
-				ref.svlen, str(ref.exons_spanned), ref.make_decipher_link(), \
+				ref.svlen, ref.make_decipher_link(), \
 				ddd_sv, ddd_dup_n_samples_with_sv, ddd_dup_freq, ddd_del_n_samples_with_sv, ddd_del_freq, \
 				synz, misz, pli, \
 				ref.make_hgmd_gene_list(), hgmd_disease, hgmd_tag, hgmd_description, hgmd_comments, hgmd_journal_info, \
@@ -301,10 +304,10 @@ class StructuralVariantRecords:
 
 				out.write(out_line)
 
-	def annotate(self, exon_bed, hgmd_db, hpo):
+	def annotate(self, exon_bed, hgmd_db, hpo, exac, omim):
 		def calc_exons_spanned(exon_bed):
 			'''
-				Populates the field: exons_spanned for all reference intervals
+				exons_spanned: Count the number of overlapping exonic regions for all reference intervals
 			'''
 			exon_ref = BedTool(exon_bed)
 			all_ref_sv = self.all_ref_BedTool()
@@ -313,7 +316,7 @@ class StructuralVariantRecords:
 
 		def annotsv():
 			'''
-				Handles DGV, DDD and OMIM annotations
+				Handles DGV, DDD annotations
 			'''
 			all_sv_bed_name = "all_sv.bed"
 			annotated = "./{}.annotated.tsv".format(all_sv_bed_name)
@@ -323,7 +326,6 @@ class StructuralVariantRecords:
 
 			with open(annotated, "r") as f:
 				next(f) #skip header
-
 				for fields in f:
 					field = fields.rstrip('\n').replace(',', ';').split('\t')
 					field = [ "" if not f else str(f) for f in field ]
@@ -346,14 +348,6 @@ class StructuralVariantRecords:
 						sv.ddd_dup_freq = field[23]
 						sv.ddd_del_n_samples_with_sv =field[24]
 						sv.ddd_del_freq = field[25]
-					elif field[4] == "split":
-						gene_name = field[5]
-						gene_anno = sv.genes[gene_name] if gene_name in sv.genes.keys() else sv.add_gene(gene_name)
-
-						#OMIM Annotations
-						gene_anno.mim_num, gene_anno.mim_phenotype, gene_anno.mim_inheritance = field[38], field[39], field[40]
-						#pLI Annotations
-						gene_anno.synz, gene_anno.misz, gene_anno.pli = field[34], field[35], field[36]
 
 			os.remove(all_sv_bed_name)
 			os.remove(annotated)
@@ -378,37 +372,60 @@ class StructuralVariantRecords:
 
 					if cur.fetchone() is not None:
 						gene_anno.is_in_hgmd = True
-						# Look for solved cases in this gene involving structural variants 
 						if svtype == "DEL":
 							cur.execute('SELECT DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSDEL WHERE GENE=?', (gene_name, ) )
-							gene_anno.add_hgmd_anno(decode_rows(cur.fetchall()))
 						elif svtype == "INS":
 							cur.execute('SELECT DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSINS WHERE GENE=? AND TYPE=?', (gene_name, 'I'))
-							gene_anno.add_hgmd_anno(decode_rows(cur.fetchall()))
 						elif svtype == "DUP":
 							cur.execute('SELECT DISEASE, TAG, DESCR, COMMENTS, JOURNAL, AUTHOR, YEAR, PMID FROM GROSINS WHERE GENE=? AND TYPE=?', (gene_name, 'D'))
-							gene_anno.add_hgmd_anno(decode_rows(cur.fetchall()))
+						gene_anno.add_hgmd_anno(decode_rows(cur.fetchall()))
 					else:
 						gene_anno.is_in_hgmd = False
 
 			conn.close()
-		
-		def hpo_terms(hpo):
-			ontology = {}
-			with open(hpo) as f:
-				for line in f:
-					fields = line.strip('\n').split('\t')
-					gene, features = fields[0], fields[3]
-					ontology[gene] = [feat for feat in features.split('; ')]
+
+		def annotate_genes(exac, hpo, omim):
+			def process_OMIM_phenotype(phenotype):
+				# Re-implemented string processing from AnnotSV-omim.tcl
+				inheritance_codes = {"Autosomal dominant":"AD", \
+				"Autosomal recessive":"AR", \
+				"X-linked dominant":"XLD", \
+				"X-linked recessive":"XLR", \
+				"Y-linked dominant":"YLD", \
+				"Y-linked recessive":"YLR", \
+				"X-linked":"XL", \
+				"Y-linked":"YL"}
+				inheritance = []
+				phenotype = phenotype.replace(', ', '|')
+				
+				for p in phenotype.split(';'):
+					multiple_inheritance = [code for description, code in inheritance_codes.items() if description in p]
+					if multiple_inheritance: inheritance.append('&'.join(multiple_inheritance))
+
+				return phenotype.replace('; ', ' & '), ';'.join(inheritance)
+
+			hpo_terms = pd.read_csv(hpo, sep='\t')
+			exac_scores = pd.read_csv(exac, sep='\t')
+			omim_phenotypes = pd.read_csv(omim, sep='\t', header=3, skipfooter=61, engine='python')
+
 			for ref_interval in self.all_ref_interval_data.values():
 				for gene_name, gene_annots in ref_interval.genes.items():
-					gene_annots.hpo_terms = ontology[gene_name] if gene_name in ontology.keys() else []
+					hpo_query = hpo_terms[hpo_terms[' Gene symbol'] == gene_name]
+					exac_query = exac_scores[exac_scores.gene == gene_name]
+					omim_query = omim_phenotypes[omim_phenotypes['Approved Symbol'] == gene_name]
+					if not hpo_query.empty:
+						gene_annots.hpo_terms = hpo_query.loc[:, ['Features']].values.item().split('; ')
+					if not exac_query.empty:
+						gene_annots.pli, gene_annots.misz, gene_annots.synz = map(str, exac_query.loc[:, ['pLI', 'mis_z', 'syn_z']].values.flatten())
+					if not omim_query.empty:
+						gene_annots.mim_num, phenotype = map(str, omim_query.loc[:, ['Mim Number', 'Phenotypes']].values.flatten())
+						gene_annots.mim_phenotype, gene_annots.mim_inheritance = process_OMIM_phenotype(phenotype)
 
-		print('Querrying HGMD ...')
+		print('Querrying HGMD for solved cases involving SV/CNV\'s...')
 		hgmd(hgmd_db)
-		print('Running AnnotSV for DDD, DGV, OMIM, PLI columns')
+		print('Running AnnotSV for DDD, DGV structural variants')
 		annotsv()
 		print('Calculating exons spanned ...')
 		calc_exons_spanned(exon_bed)
-		print('Adding HPO terms ...')
-		hpo_terms(hpo)
+		print('Annotating genes with HPO terms, ExAC scores, OMIM phenotypes ...')
+		annotate_genes(exac, hpo, omim)
