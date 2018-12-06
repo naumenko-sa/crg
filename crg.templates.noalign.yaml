@@ -9,7 +9,7 @@ details:
       use_filtered: false
     realign: false
     recalibrate: false
-    remove_lcr: true
+    remove_lcr: false
     mark_duplicates: false
     save_diskspace: true
     svcaller: [lumpy, manta, cnvkit, metasv, wham]

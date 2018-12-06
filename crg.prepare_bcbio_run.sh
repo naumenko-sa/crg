@@ -3,7 +3,7 @@
 # prepares family for bcbio run when input files are family_sample.bam or family_sample_1/2.fq.gz
 family=$1
 
-# template type = default | noalign | align_decoy
+# template type = default | noalign | align_decoy | cnvkit
 noalign=$2
 
 cd $family
@@ -24,7 +24,7 @@ do
 done < samples.txt
 
 #default template
-template=~/crg/crg.bcbio.wgs.yaml
+template=~/crg/crg.templates.default.yaml
 
 template_type=$2
 
@@ -32,10 +32,12 @@ if [ -n "$2" ]
 then
     if [ $template_type == "noalign" ]
     then
-	template=~/crg/crg.templates.wgs.noalign.yaml
+	template=~/crg/crg.templates.noalign.yaml
     elif [ $template_type == "align_decoy" ]
     then
-	template=~/crg/crg.align_decoy.yaml
+	template=~/crg/crg.templates.align_decoy.yaml
+    else
+	template=~/crg/crg.templates.default.yaml
     fi
 fi
 
