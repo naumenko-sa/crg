@@ -396,29 +396,29 @@ class StructuralVariantRecords:
 				"X-linked":"XL", \
 				"Y-linked":"YL"}
 				inheritance = []
-				phenotype = phenotype.replace(', ', '|')
 				
 				for p in phenotype.split(';'):
 					multiple_inheritance = [code for description, code in inheritance_codes.items() if description in p]
 					if multiple_inheritance: inheritance.append('&'.join(multiple_inheritance))
 
-				return phenotype.replace('; ', ' & '), ';'.join(inheritance)
+				return phenotype.replace('; ', ' & ').replace(', ', '|'), ';'.join(inheritance)
 
-			hpo_terms = pd.read_csv(hpo, sep='\t')
-			exac_scores = pd.read_csv(exac, sep='\t')
+			hpo_exists = os.path.isfile(hpo)
+			if hpo_exists: hpo_terms = pd.read_csv(hpo, sep='\t').set_index(' Gene symbol')
+			exac_scores = pd.read_csv(exac, sep='\t').set_index('gene')
+			exac_scores[['pLI', 'mis_z', 'syn_z']] = exac_scores[['pLI', 'mis_z', 'syn_z']].astype(str)
 			omim_phenotypes = pd.read_csv(omim, sep='\t', header=3, skipfooter=61, engine='python')
+			omim_phenotypes[['Mim Number', 'Phenotypes']] = omim_phenotypes[['Mim Number', 'Phenotypes']].astype(str) 
+			omim_phenotypes = omim_phenotypes.groupby('Approved Symbol').agg({'Mim Number': '; '.join, 'Phenotypes': '; '.join})
 
 			for ref_interval in self.all_ref_interval_data.values():
 				for gene_name, gene_annots in ref_interval.genes.items():
-					hpo_query = hpo_terms[hpo_terms[' Gene symbol'] == gene_name]
-					exac_query = exac_scores[exac_scores.gene == gene_name]
-					omim_query = omim_phenotypes[omim_phenotypes['Approved Symbol'] == gene_name]
-					if not hpo_query.empty:
-						gene_annots.hpo_terms = hpo_query.loc[:, ['Features']].values.item().split('; ')
-					if not exac_query.empty:
-						gene_annots.pli, gene_annots.misz, gene_annots.synz = map(str, exac_query.loc[:, ['pLI', 'mis_z', 'syn_z']].values.flatten())
-					if not omim_query.empty:
-						gene_annots.mim_num, phenotype = map(str, omim_query.loc[:, ['Mim Number', 'Phenotypes']].values.flatten())
+					if hpo_exists and gene_name in hpo_terms.index:
+						gene_annots.hpo_terms = hpo_terms.loc[gene_name, 'Features'].replace(', ', '|').split('; ')
+					if gene_name in exac_scores.index:
+						gene_annots.pli, gene_annots.misz, gene_annots.synz = exac_scores.loc[gene_name, ['pLI', 'mis_z', 'syn_z']]
+					if gene_name in omim_phenotypes.index:
+						gene_annots.mim_num, phenotype = omim_phenotypes.loc[gene_name, ['Mim Number', 'Phenotypes']]
 						gene_annots.mim_phenotype, gene_annots.mim_inheritance = process_OMIM_phenotype(phenotype)
 
 		print('Querrying HGMD for solved cases involving SV/CNV\'s...')
