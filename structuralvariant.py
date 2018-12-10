@@ -401,12 +401,14 @@ class StructuralVariantRecords:
 					multiple_inheritance = [code for description, code in inheritance_codes.items() if description in p]
 					if multiple_inheritance: inheritance.append('&'.join(multiple_inheritance))
 
-				return phenotype.replace('; ', ' & ').replace(', ', '|'), ';'.join(inheritance)
+				return phenotype.replace(', ', '|'), ';'.join(inheritance)
 
 			hpo_exists = os.path.isfile(hpo)
 			if hpo_exists: hpo_terms = pd.read_csv(hpo, sep='\t').set_index(' Gene symbol')
+
 			exac_scores = pd.read_csv(exac, sep='\t').set_index('gene')
 			exac_scores[['pLI', 'mis_z', 'syn_z']] = exac_scores[['pLI', 'mis_z', 'syn_z']].astype(str)
+
 			omim_phenotypes = pd.read_csv(omim, sep='\t', header=3, skipfooter=61, engine='python')
 			omim_phenotypes[['Mim Number', 'Phenotypes']] = omim_phenotypes[['Mim Number', 'Phenotypes']].astype(str) 
 			omim_phenotypes = omim_phenotypes.groupby('Approved Symbol').agg({'Mim Number': '; '.join, 'Phenotypes': '; '.join})
