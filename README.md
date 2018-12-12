@@ -2,18 +2,29 @@
 clinical reseach genome scripts
 
 # Steps:
-1. Create project(=case=family) dir:\
+1. Align reads vs reference with decoy
+1.1 Create a project(=case=family) dir:\
 `mkdir -p project/input`
-2. Copy/symlink input files to project/input: 
+1.2. Copy/symlink input files to project/input: 
 - project_sample.bam
 - project_sample_1.fq.gz
 - project_sample_2.fq.gz
-3. `crg.prepare_bcbio_run.sh project`
-4. `qsub ~/cre/bcbio.pbs -v project=project`\
+1.3. Create bcbio project:\
+`crg.prepare_bcbio_run.sh project align_decoy`
+1.4. `qsub ~/cre/bcbio.pbs -v project=project`\
 or for multiple projects create list of projects in projects.txt and run\
 `qsub -t 1-N ~/cre/bcbio.array.pbs`\
 where N = number of projects in the current dir.
-5. `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
+2. Call small and structural variants
+2.1 Create a project dir:\
+`mkdir -p project/input`
+2.2 Copy bam files from step1 to project/input: project_sample.bam 
+2.3 Create bcbio project
+`crg.prepare_bcbio_run.sh project no_align`
+2.2 Run bcbio:\
+`qsub ~/cre/bcbio.pbs -v project=project`
+3. Clean up:\
+`qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
 ## AnnotSV
 [AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
