@@ -3,7 +3,7 @@ clinical reseach genome scripts
 
 # Steps:
 1. Align reads vs reference with decoy
-1.1 Create a project(=case=family) dir:\
+  1.1 Create a project(=case=family) dir:\
 `mkdir -p project/input`
 1.2. Copy/symlink input files to project/input: 
 - project_sample.bam
