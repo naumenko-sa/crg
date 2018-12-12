@@ -6,9 +6,11 @@ clinical reseach genome scripts
   * Create a project(=case=family) dir:\
 `mkdir -p project/input`
   * Copy/symlink input files to project/input: 
+```
 - project_sample.bam
 - project_sample_1.fq.gz
 - project_sample_2.fq.gz
+```
   * Create bcbio project:\
 `crg.prepare_bcbio_run.sh project align_decoy`
   * `qsub ~/cre/bcbio.pbs -v project=project`\
