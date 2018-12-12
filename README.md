@@ -3,25 +3,25 @@ clinical reseach genome scripts
 
 # Steps:
 1. Align reads vs reference with decoy
-  1.1 Create a project(=case=family) dir:\
+  * Create a project(=case=family) dir:\
 `mkdir -p project/input`
-1.2. Copy/symlink input files to project/input: 
+  * Copy/symlink input files to project/input: 
 - project_sample.bam
 - project_sample_1.fq.gz
 - project_sample_2.fq.gz
-1.3. Create bcbio project:\
+  * Create bcbio project:\
 `crg.prepare_bcbio_run.sh project align_decoy`
-1.4. `qsub ~/cre/bcbio.pbs -v project=project`\
+  * `qsub ~/cre/bcbio.pbs -v project=project`\
 or for multiple projects create list of projects in projects.txt and run\
 `qsub -t 1-N ~/cre/bcbio.array.pbs`\
 where N = number of projects in the current dir.
 2. Call small and structural variants
-2.1 Create a project dir:\
+  * Create a project dir:\
 `mkdir -p project/input`
-2.2 Copy bam files from step1 to project/input: project_sample.bam 
-2.3 Create bcbio project
+  * Copy bam files from step1 to project/input: project_sample.bam 
+  * Create bcbio project
 `crg.prepare_bcbio_run.sh project no_align`
-2.2 Run bcbio:\
+  * Run bcbio:\
 `qsub ~/cre/bcbio.pbs -v project=project`
 3. Clean up:\
 `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
