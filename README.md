@@ -31,8 +31,6 @@ where N = number of projects in the current dir.
 ## AnnotSV
 [AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
 
-## Individual sample report columns:
-=======
 # Report columns:
 - CHR
 - POS
@@ -57,8 +55,7 @@ crg.intersect_sv_reports.py is a script which groups then annotates structural v
 
 Grouping is useful when analyzing families as most structural variants should be similar and conserved across samples. The criteria for grouping is defined as a minimum of a 50% recipricol overlap with an arbitrary "reference" interval. This criteria gaurentees that grouped structural variants are of similar size and position.
 
-Annotation is largely accomplished by using a tool called [AnnotSV](http://lbgi.fr/AnnotSV/) made by [Véronique Geoffroy](https://www.researchgate.net/profile/Veronique_Geoffroy2). DGV, DDD columns come directly from AnnotSV.
-Information on each of these columns can be found on the [AnnotSV website](http://lbgi.fr/AnnotSV/annotations).
+DGV, DDD and OMIM columns are annotated by [AnnotSV](http://lbgi.fr/AnnotSV/) made by [Véronique Geoffroy](https://www.researchgate.net/profile/Veronique_Geoffroy2).
 
 The script produces a CSV file which can be analyzed using spreadsheet software.
 
@@ -81,6 +78,14 @@ Includes all of the columns above, except SOURCES, NUM_SVTOOLS, SVTYPE and ANN, 
 - DDD_DUP_Frequency
 - DDD_DEL_n_samples_with_SV
 - DDD_DEL_Frequency
+- OMIM: Gene annotation, format: {GENE MIM# INHERITANCE DESCRIPTION};
+- synZ
+- misZ
+- pLI
+- HGMD_GROSS_INSERTION: gross (>20bp) insertion events in this gene that have been observed in HGMD, format {GENE|DISEASE|TAG|DESCRIPTION|COMMENTS|JOURNAL|AUTHOR|YEAR|PMID}
+- HGMD_GROSS_DUPLICATION: gross duplication events in this gene that have been observed in HGMD
+- HGMD_GROSS_DELETION: gross deletion events in this gene that have been observed in HGMD
+- HGMD_COMPLEX_VARIATION: complex variantions (combination of indels, translocations, SNP, fusions, inversions) in this gene that have been observed in HGMD
 - SAMPLENAME: does this sample have an overlapping SV in it? (0,1)
 - SAMPLENAME_details: what are the SV's in this sample which overlap with the reference?
 
