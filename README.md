@@ -6,17 +6,31 @@
   * Run bcbio project: `qsub ~/cre/bcbio.pbs -v project=project`\
 	For multiple projects create list of projects in projects.txt and run `qsub -t 1-N ~/cre/bcbio.array.pbs`\ where N = number of projects.
 
-2. Call small and structural variants
-  * Create a project dir:\
-`mkdir -p project/input`
-  * Move bam file(s) from step1 to project/input: project_sample.bam 
-  * Create bcbio project: `crg.prepare_bcbio_run.sh project no_align`
-  * Run bcbio:  `qsub ~/cre/bcbio.pbs -v project=project`
+2. Remove decoy reads: `qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`. Keep original bam with decoy reads to store data.
 
-3. Clean up:\
-`qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
+3. Call small and structural variants
+ 	* Create a project dir: `mkdir -p project/input`
+ 	* Move bam file(s) from step1 to project/input: project_sample.bam 
+ 	* Create bcbio project: `crg.prepare_bcbio_run.sh project no_align`
+	* Run bcbio:  `qsub ~/cre/bcbio.pbs -v project=project`
 
-4. Excel report generation. [Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing)
+4. Clean up bcbio run: `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
+
+5. Excel reports for small variants.
+	* coding report: `cre.sh -v project=project`
+	* noncoding variants for gene panels: 
+		- create a bed file for a set of genes with [genes.R](~/bioscripts/genes.R)
+		- subset variants: `bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`
+		- strip annotations: `~/cre/cre.annotation.strip.sh`
+		- annotate variants in panels and create gemini.db: `qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
+		- build report: `qsub ~/cre/cre.sh -f family=project,type=wgs`
+	* noncoding variants for gene panels with flank
+		- modify bed file, add 100k bp to each gene start and end: `cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000'
+		- proceed as for noncoding small variant report
+	* de-novo variants for trios
+
+6. Excel reports for structural variants  
+	* [Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing)
 
 
 
