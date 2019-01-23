@@ -29,11 +29,14 @@
 		- proceed as for noncoding small variant report
 	* de-novo variants for trios
 
-6. Excel reports for structural variants  
-	* [Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing)
+6. Excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
 	* Navigate to `project/sv`
-	* Report on SV occuring in each sample: Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder
-	* Report on SV across multiple samples: Gather each report in to a single directory and run: `crg.intersect_sv_reports.sh project` to produce a single report summarizing structural variants across all samples
+	* Report on SV's occuring in each sample: 
+		- Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder. 
+		- *Optional* crg.sv.prioritize.sh will produce a `sample.tsv` file. A contact in TCAG can annotate this file to add an additional column to the sample's SV report, DGV. Otherwise, this column will show up as NA. Run `crg.sv.prioritize.sh sample panel.bed tcag_annotated_file.tsv` to produce this report.
+	* Report on SV's across multiple samples: 
+		- Gather each report from the previous step in to a single directory
+		- Run: `crg.intersect_sv_reports.sh project` to produce a single report summarizing structural variants across all samples
 
 
 # Report columns:
@@ -65,6 +68,7 @@ The script produces a CSV file which can be analyzed using spreadsheet software.
 ### ~/gene_data directory containing the following files:
 	HGMD=${HOME}/gene_data/HGMD_2018/hgmd_pro.db
 	EXON_BED=${HOME}/gene_data/protein_coding_genes.exons.fixed.sorted.bed
+	HPO=${HOME}/gene_data/HPO_2018/${FAMILY_ID}_HPO.txt
 	EXAC=${HOME}/gene_data/ExAC/fordist_cleaned_nonpsych_z_pli_rec_null_data.txt
 	OMIM=${HOME}/gene_data/OMIM_2018-11-01/genemap2.txt
 
