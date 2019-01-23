@@ -1,6 +1,3 @@
-# crg
-clinical reseach genome scripts
-
 # Steps:
 1. Align reads vs GRCh37 reference with decoy
   * Create a project(=case=family) dir: `mkdir -p project/input`
@@ -18,6 +15,10 @@ clinical reseach genome scripts
 
 3. Clean up:\
 `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
+
+4. Excel report generation. [Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing)
+
+
 
 ## AnnotSV
 [AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
