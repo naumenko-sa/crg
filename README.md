@@ -31,11 +31,10 @@
 
 6. Excel reports for structural variants  
 	* [Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing)
+	* Navigate to `project/sv`
+	* Report on SV occuring in each sample: Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder
+	* Report on SV across multiple samples: Gather each report in to a single directory and run: `crg.intersect_sv_reports.sh project` to produce a single report summarizing structural variants across all samples
 
-
-
-## AnnotSV
-[AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
 
 # Report columns:
 - CHR
@@ -57,15 +56,26 @@
 - DGV: frequency in DGV, 8000 WGS
 
 # Family report
-crg.intersect_sv_reports.py is a script which groups then annotates structural variants across multiple samples. 
-
-Grouping is useful when analyzing families as most structural variants should be similar and conserved across samples. The criteria for grouping is defined as a minimum of a 50% recipricol overlap with an arbitrary "reference" interval. This criteria gaurentees that grouped structural variants are of similar size and position.
-
-DGV, DDD and OMIM columns are annotated by [AnnotSV](http://lbgi.fr/AnnotSV/) made by [Véronique Geoffroy](https://www.researchgate.net/profile/Veronique_Geoffroy2).
+crg.intersect_sv_reports.py generates a report summarizing structural variants across several samples. It groups structural variants of similar size and position in to a single "reference" structural variant. Grouping is useful when analyzing families as most structural variants should be similar and conserved across samples.
 
 The script produces a CSV file which can be analyzed using spreadsheet software.
 
+## Family report requirements:
+
+### ~/gene_data directory containing the following files:
+	HGMD=${HOME}/gene_data/HGMD_2018/hgmd_pro.db
+	EXON_BED=${HOME}/gene_data/protein_coding_genes.exons.fixed.sorted.bed
+	EXAC=${HOME}/gene_data/ExAC/fordist_cleaned_nonpsych_z_pli_rec_null_data.txt
+	OMIM=${HOME}/gene_data/OMIM_2018-11-01/genemap2.txt
+
+### AnnotSV
+[AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate a family report. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
+
+DGV and DDD columns are annotated by [AnnotSV](http://lbgi.fr/AnnotSV/).
+
 ## Family report columns:
+[In-depth column descriptions](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit#)
+
 Includes all of the columns above, except SOURCES, NUM_SVTOOLS, SVTYPE and ANN, in addition to:
 - N_SAMPLES: number of samples a reference interval overlaps with
 - LONGEST_SVTYPE: SVTYPE taken from the longest overlapping SV
@@ -84,19 +94,25 @@ Includes all of the columns above, except SOURCES, NUM_SVTOOLS, SVTYPE and ANN, 
 - DDD_DUP_Frequency
 - DDD_DEL_n_samples_with_SV
 - DDD_DEL_Frequency
-- OMIM: Gene annotation, format: {GENE MIM# INHERITANCE DESCRIPTION};
-- synZ
-- misZ
-- pLI
-- HGMD_GROSS_INSERTION: gross (>20bp) insertion events in this gene that have been observed in HGMD, format {GENE|DISEASE|TAG|DESCRIPTION|COMMENTS|JOURNAL|AUTHOR|YEAR|PMID}
+- OMIM MIM# 
+- OMIM INHERITANCE
+- OMIM DESCRIPTION
+- SYNZ
+- MISZ
+- PLI
+- GENES_IN_HGMD
+- HGMD_DISEASE
+- HGMD_TAG
+- HGMD_DESCRIPTION
+- HGMD_COMMENT
+- HGMD_JOURNAL_INFO
+- HGMD_GROSS_INSERTION: gross (>20bp) insertion events in this gene that have been observed in HGMD
 - HGMD_GROSS_DUPLICATION: gross duplication events in this gene that have been observed in HGMD
 - HGMD_GROSS_DELETION: gross deletion events in this gene that have been observed in HGMD
-- HGMD_COMPLEX_VARIATION: complex variantions (combination of indels, translocations, SNP, fusions, inversions) in this gene that have been observed in HGMD
-- SAMPLENAME: does this sample have an overlapping SV in it? (0,1)
-- SAMPLENAME_details: what are the SV's in this sample which overlap with the reference?
-
-## To generate a family level report:
-```python crg.intersect_sv_reports.py -exon_bed=/path/to/protein_coding_genes.exons.fixed.sorted.bed -o=output_family_report_name.csv -i sample1.sv.csv sample2.sv.csv sample3.sv.csv```
+- HGMD_COMPLEX_VARIATION: complex variations (combination of indels, translocations, SNP, fusions, inversions) in this gene that have been observed in HGMD
+- SAMPLE: does this sample have an overlapping SV in it? (0,1)
+- SAMPLE_details: what are the SV's in this sample which overlap with the reference?
+- SAMPLE_GENOTYPE
 
 ## Use case: compared SV calls from TCAG (ERDS) to MetaSV
 ```
