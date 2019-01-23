@@ -2,7 +2,7 @@
 clinical reseach genome scripts
 
 # Steps:
-1. Align reads vs reference with decoy
+1. Align reads vs GRCh37 reference with decoy
   * Create a project(=case=family) dir:\
 `mkdir -p project/input`
   * Copy/symlink input files to project/input: 
@@ -11,20 +11,17 @@ clinical reseach genome scripts
 - project_sample_1.fq.gz
 - project_sample_2.fq.gz
 ```
-  * Create bcbio project:\
-`crg.prepare_bcbio_run.sh project align_decoy`
-  * `qsub ~/cre/bcbio.pbs -v project=project`\
-or for multiple projects create list of projects in projects.txt and run\
-`qsub -t 1-N ~/cre/bcbio.array.pbs`\
+  * Create bcbio project: `crg.prepare_bcbio_run.sh project align_decoy`
+  * Run bcbio project: `qsub ~/cre/bcbio.pbs -v project=project`\
+ For multiple projects create list of projects in projects.txt and run `qsub -t 1-N ~/cre/bcbio.array.pbs`\
 where N = number of projects in the current dir.
+
 2. Call small and structural variants
   * Create a project dir:\
 `mkdir -p project/input`
-  * Copy bam files from step1 to project/input: project_sample.bam 
-  * Create bcbio project
-`crg.prepare_bcbio_run.sh project no_align`
-  * Run bcbio:\
-`qsub ~/cre/bcbio.pbs -v project=project`
+  * Move bam file(s) from step1 to project/input: project_sample.bam 
+  * Create bcbio project: `crg.prepare_bcbio_run.sh project no_align`
+  * Run bcbio:  `qsub ~/cre/bcbio.pbs -v project=project`
 3. Clean up:\
 `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
@@ -91,3 +88,10 @@ Includes all of the columns above, except SOURCES, NUM_SVTOOLS, SVTYPE and ANN, 
 
 ## To generate a family level report:
 ```python crg.intersect_sv_reports.py -exon_bed=/path/to/protein_coding_genes.exons.fixed.sorted.bed -o=output_family_report_name.csv -i sample1.sv.csv sample2.sv.csv sample3.sv.csv```
+
+## Use case: compared SV calls from TCAG (ERDS) to MetaSV
+```
+bcftools view -i 'ALT="<DEL>"' 159_CH0315.pass.vcf.gz | bcftools query -f '%CHROM\t%POS\t%INFO/END\n' -o 159.metasv.del.bed
+cat 159_CH0315.erds+_db20171204_20180815_3213_annotated.tsv |  awk '$5 ~/DEL/{print $2"\t"$3"\t"$4}'  > 159.tcag.del.bed
+bedtools intersect -a 159.tcag.dup.bed -b 159.metasv.dup.bed -f 0.5 -wo -r | wc -l
+```
