@@ -3,18 +3,11 @@ clinical reseach genome scripts
 
 # Steps:
 1. Align reads vs GRCh37 reference with decoy
-  * Create a project(=case=family) dir:\
-`mkdir -p project/input`
-  * Copy/symlink input files to project/input: 
-```
-- project_sample.bam
-- project_sample_1.fq.gz
-- project_sample_2.fq.gz
-```
+  * Create a project(=case=family) dir: `mkdir -p project/input`
+  * Copy/symlink input file(s) to project/input:  project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
   * Create bcbio project: `crg.prepare_bcbio_run.sh project align_decoy`
   * Run bcbio project: `qsub ~/cre/bcbio.pbs -v project=project`\
- For multiple projects create list of projects in projects.txt and run `qsub -t 1-N ~/cre/bcbio.array.pbs`\
-where N = number of projects in the current dir.
+	For multiple projects create list of projects in projects.txt and run `qsub -t 1-N ~/cre/bcbio.array.pbs`\ where N = number of projects.
 
 2. Call small and structural variants
   * Create a project dir:\
@@ -22,6 +15,7 @@ where N = number of projects in the current dir.
   * Move bam file(s) from step1 to project/input: project_sample.bam 
   * Create bcbio project: `crg.prepare_bcbio_run.sh project no_align`
   * Run bcbio:  `qsub ~/cre/bcbio.pbs -v project=project`
+
 3. Clean up:\
 `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
