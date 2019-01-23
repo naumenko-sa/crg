@@ -25,7 +25,7 @@
 		- annotate variants in panels and create gemini.db: `qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
 		- build report: `qsub ~/cre/cre.sh -f family=project,type=wgs`
 	* noncoding variants for gene panels with flank
-		- modify bed file, add 100k bp to each gene start and end: `cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000'
+		- modify bed file, add 100k bp to each gene start and end: `cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000'`
 		- proceed as for noncoding small variant report
 	* de-novo variants for trios
 
