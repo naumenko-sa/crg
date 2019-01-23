@@ -1,11 +1,9 @@
 details:
 - algorithm:
     aligner: false
+    bam_clean: picard
     effects: vep
     effects_transcripts: all
-    ensemble:
-      numpass: 2
-      use_filtered: false
     realign: false
     recalibrate: false
     remove_lcr: false
@@ -28,7 +26,7 @@ details:
   - /hpf/largeprojects/ccmbio/naumenko/project_cheo/912R/input/912R_A337376.bam
   genome_build: GRCh37
   metadata:
-    batch: 912R
+    batch: project
 resources:
   default:
     cores: 7
