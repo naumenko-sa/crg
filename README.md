@@ -17,7 +17,7 @@
 4. Clean up bcbio run: `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
 5. Excel reports for small variants.
-	* coding report: `cre.sh -v project=project`
+	* coding report: `qsub ~/cre/cre.sh -v family=project`
 	* noncoding variants for gene panels: 
 		- create a bed file for a set of genes with [genes.R](~/bioscripts/genes.R)
 		- subset variants: `bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`
