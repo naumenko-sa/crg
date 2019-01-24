@@ -30,10 +30,6 @@
 	* de-novo variants for trios
 
 6. Excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
-
-
-
-
 	* Navigate to `project/sv`
 	* Report on SV's occuring in each sample: 
 		- Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder. 
