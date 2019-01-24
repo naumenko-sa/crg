@@ -38,6 +38,8 @@
 		- Gather each report from the previous step in to a single directory
 		- Run: `crg.intersect_sv_reports.sh project` to produce a single report summarizing structural variants across all samples
 
+## AnnotSV
+[AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
 
 # Report columns:
 - CHR
