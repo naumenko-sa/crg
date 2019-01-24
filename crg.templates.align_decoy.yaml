@@ -1,5 +1,6 @@
 # no realignment and recalibration
 # alignment vs decoy
+# quality control
 details:
 - algorithm:
     aligner: bwa
@@ -9,6 +10,9 @@ details:
     mark_duplicates: true
     save_diskspace: true
     variantcaller: false
+    tools_on:
+    - svplots
+    - qualimap
   analysis: variant2
   description: 'project_sample'
   files:
