@@ -36,6 +36,9 @@ then
     elif [ $template_type == "align_decoy" ]
     then
 	template=~/crg/crg.templates.align_decoy.yaml
+    elif [ $template_type == "cnvkit" ]
+    then
+	template=~/crg/crg.templates.cnvkit.yaml
     else
 	template=~/crg/crg.templates.default.yaml
     fi

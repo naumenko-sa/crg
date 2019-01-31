@@ -1,11 +1,11 @@
+# input = bam file
 details:
 - algorithm:
     aligner: false
-    effects: vep
-    effects_transcripts: all
+    effects: false
     realign: false
     recalibrate: false
-    remove_lcr: true
+    remove_lcr: false
     mark_duplicates: false
     save_diskspace: true
     svcaller:
@@ -13,7 +13,6 @@ details:
     tools_on:
     - svplots
     - qualimap
-    - vep_splice_annotations
     - noalt_calling
     variantcaller: false
   analysis: variant2

@@ -3,9 +3,6 @@ details:
     aligner: bwa
     effects: vep
     effects_transcripts: all
-    ensemble:
-      numpass: 2
-      use_filtered: false
     realign: true
     recalibrate: true
     remove_lcr: false
@@ -18,10 +15,12 @@ details:
     - qualimap
     - vep_splicesite_annotations
     - noalt_calling
+    tools_off:
+    - vqsr
     variantcaller:
     - gatk-haplotype
     vcfanno:
-    - /home/naumenko/cre/cre.vcfanno.conf
+    - /home/naumenko/crg/crg.vcfanno.conf
   analysis: variant2
   description: 'project_sample'
   files:

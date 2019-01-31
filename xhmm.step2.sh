@@ -23,56 +23,47 @@ xhmm_home=/hpf/largeprojects/ccmbio/naumenko/tools/xhmm/statgen-xhmm-cc14e528d90
 #-o DATA.RD.txt
 
 ${xhmm_home}/xhmm --mergeGATKdepths -o DATA.RD.txt \
---GATKdepths group00.DATA.sample_interval_summary \
---GATKdepths group01.DATA.sample_interval_summary \
---GATKdepths group02.DATA.sample_interval_summary \
---GATKdepths group03.DATA.sample_interval_summary \
---GATKdepths group04.DATA.sample_interval_summary \
---GATKdepths group05.DATA.sample_interval_summary \
---GATKdepths group06.DATA.sample_interval_summary \
---GATKdepths group07.DATA.sample_interval_summary \
---GATKdepths group08.DATA.sample_interval_summary \
---GATKdepths group09.DATA.sample_interval_summary \
---GATKdepths group10.DATA.sample_interval_summary \
---GATKdepths group11.DATA.sample_interval_summary \
---GATKdepths group12.DATA.sample_interval_summary \
---GATKdepths group13.DATA.sample_interval_summary \
---GATKdepths group14.DATA.sample_interval_summary \
---GATKdepths group15.DATA.sample_interval_summary \
---GATKdepths group16.DATA.sample_interval_summary \
---GATKdepths group17.DATA.sample_interval_summary \
---GATKdepths group18.DATA.sample_interval_summary \
---GATKdepths group19.DATA.sample_interval_summary \
---GATKdepths group20.DATA.sample_interval_summary \
---GATKdepths group21.DATA.sample_interval_summary \
---GATKdepths group22.DATA.sample_interval_summary \
---GATKdepths group23.DATA.sample_interval_summary \
---GATKdepths group24.DATA.sample_interval_summary \
---GATKdepths group25.DATA.sample_interval_summary \
---GATKdepths group26.DATA.sample_interval_summary \
---GATKdepths group27.DATA.sample_interval_summary \
---GATKdepths group28.DATA.sample_interval_summary \
---GATKdepths group29.DATA.sample_interval_summary \
---GATKdepths group30.DATA.sample_interval_summary \
---GATKdepths group31.DATA.sample_interval_summary \
---GATKdepths group32.DATA.sample_interval_summary \
---GATKdepths group33.DATA.sample_interval_summary \
---GATKdepths group34.DATA.sample_interval_summary \
---GATKdepths group35.DATA.sample_interval_summary 
+--GATKdepths group.1.DATA.sample_interval_summary \
+--GATKdepths group.2.DATA.sample_interval_summary \
+--GATKdepths group.3.DATA.sample_interval_summary \
+--GATKdepths group.4.DATA.sample_interval_summary \
+--GATKdepths group.5.DATA.sample_interval_summary \
+--GATKdepths group.6.DATA.sample_interval_summary \
+--GATKdepths group.7.DATA.sample_interval_summary \
+--GATKdepths group.8.DATA.sample_interval_summary \
+--GATKdepths group.9.DATA.sample_interval_summary \
+--GATKdepths group.10.DATA.sample_interval_summary \
+--GATKdepths group.11.DATA.sample_interval_summary \
+--GATKdepths group.12.DATA.sample_interval_summary \
+--GATKdepths group.13.DATA.sample_interval_summary \
+--GATKdepths group.14.DATA.sample_interval_summary \
+--GATKdepths group.15.DATA.sample_interval_summary \
+--GATKdepths group.16.DATA.sample_interval_summary \
+--GATKdepths group.17.DATA.sample_interval_summary \
+--GATKdepths group.18.DATA.sample_interval_summary \
+--GATKdepths group.19.DATA.sample_interval_summary \
+--GATKdepths group.20.DATA.sample_interval_summary \
+--GATKdepths group.21.DATA.sample_interval_summary \
+--GATKdepths group.22.DATA.sample_interval_summary \
+--GATKdepths group.23.DATA.sample_interval_summary \
+--GATKdepths group.24.DATA.sample_interval_summary \
+--GATKdepths group.25.DATA.sample_interval_summary \
+--GATKdepths group.26.DATA.sample_interval_summary \
+--GATKdepths group.27.DATA.sample_interval_summary
 
-gatk -Xmx3072m \
--T GCContentByInterval -L EXOME.interval_list \
+gatk3 -Xmx3072m \
+-T GCContentByInterval -L $interval_list \
 -R $reference \
 -o DATA.locus_GC.txt
 
 cat DATA.locus_GC.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
 
-${xhmm_home}/sources/scripts/interval_list_to_pseq_reg EXOME.interval_list > EXOME.targets.reg
+${xhmm_home}/sources/scripts/interval_list_to_pseq_reg $interval_list > EXOME.targets.reg
 module load plinkseq
 
 pseq . loc-load --locdb EXOME.targets.LOCDB --file EXOME.targets.reg --group targets --out EXOME.targets.LOCDB.loc-load --noweb
 
-pseq . loc-stats --locdb EXOME.targets.LOCDB --group targets --seqdb seqdb --noweb | awk '{if (NR > 1) print $_}' | sort -k1 -g | awk '{print $10}' | paste EXOME.interval_list - | awk '{print $1"\t"$2}' > DATA.locus_complexity.txt
+pseq . loc-stats --locdb EXOME.targets.LOCDB --group targets --seqdb seqdb --noweb | awk '{if (NR > 1) print $_}' | sort -k1 -g | awk '{print $10}' | paste $interval_list - | awk '{print $1"\t"$2}' > DATA.locus_complexity.txt
 
 cat DATA.locus_complexity.txt | awk '{if ($2 > 0.25) print $1}' > low_complexity_targets.txt
 

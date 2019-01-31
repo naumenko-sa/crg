@@ -1,0 +1,34 @@
+details:
+- algorithm:
+    aligner: false
+    effects: false
+    mark_duplicates: false
+    realign: false
+    recalibrate: false
+    remove_lcr: false
+    save_diskspace: true
+    tools_on:
+    - noalt_calling
+    tools_off:
+    - vqsr
+    variantcaller:
+    - gatk-haplotype
+    validate: giab-NA12878/truth_small_variants.vcf.gz
+    validate_regions: giab-NA12878/truth_regions.bed
+  analysis: variant2
+  description: dplmwgs_NA12878
+  files:
+  - /hpf/largeprojects/ccmbio/naumenko/validation/2018-12-04_NA12878.WGS.DPLM.small_variants/experiment5.gatk4.0.12.0.HF.noRR.decoy_full_removal/dplmwgs/input/dplmwgs_NA12878.bam
+  genome_build: GRCh37
+  metadata:
+    batch: dplmwgs
+fc_name: dplmwgs
+resources:
+  default:
+    cores: 7
+    jvm_opts:
+    - -Xms750m
+    - -Xmx7000m
+    memory: 7G
+upload:
+  dir: ../final
