@@ -1,12 +1,18 @@
-# Steps:
+# Installation
+  * bcbio installed with PATH and PYTHONPATH set.
+  * crg and crt cloned to ~/crg and ~/crt and added to PATH.
+
+# Usage
 1. Align reads vs GRCh37 reference with decoy
   * Create a project(=case=family) dir: `mkdir -p project/input`
   * Copy/symlink input file(s) to project/input:  project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
   * Create bcbio project: `crg.prepare_bcbio_run.sh project align_decoy`
   * Run bcbio project: `qsub ~/cre/bcbio.pbs -v project=project`\
-	For multiple projects create list of projects in projects.txt and run `qsub -t 1-N ~/cre/bcbio.array.pbs`\ where N = number of projects.
+	For multiple projects create list of projects in projects.txt and run `qsub -t 1-N ~/cre/bcbio.array.pbs`\
+	 where N = number of projects.
+  * To speed up the process, run one project per sample.
 
-2. Remove decoy reads: `qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`. Keep original bam with decoy reads to store data.
+2. Remove decoy reads: `qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`. Keep original bam with decoy reads to store all data.
 
 3. Call small and structural variants
  	* Create a project dir: `mkdir -p project/input`
@@ -21,8 +27,7 @@
 	* noncoding variants for gene panels: 
 		- create a bed file for a set of genes with [genes.R](~/bioscripts/genes.R)
 		- subset variants: `bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`
-		- strip annotations: `~/cre/cre.annotation.strip.sh`
-		- annotate variants in panels and create gemini.db: `qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
+		- reannotate variants in panels and create gemini.db: `qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
 		- build report: `qsub ~/cre/cre.sh -f family=project,type=wgs`
 	* noncoding variants for gene panels with flank
 		- modify bed file, add 100k bp to each gene start and end: `cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000'`
