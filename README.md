@@ -22,7 +22,7 @@
 
 4. Clean up bcbio run: `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
-5. Excel reports for small variants.
+5. Create excel reports for small variants.
 	* coding report: `qsub ~/cre/cre.sh -v family=project`
 	* noncoding variants for gene panels: 
 		- create a bed file for a set of genes with [genes.R](~/bioscripts/genes.R)
@@ -34,7 +34,7 @@
 		- proceed as for noncoding small variant report
 	* de-novo variants for trios
 
-6. Excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
+6. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
 	* Navigate to `project/sv`
 	* Report on SV's occuring in each sample: 
 		- Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder. 

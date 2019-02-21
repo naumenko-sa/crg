@@ -16,6 +16,8 @@ details:
     - qualimap
     - vep_splicesite_annotations
     - noalt_calling
+    tools_off:
+    - vqsr
     variantcaller:
     - gatk-haplotype
     vcfanno:
