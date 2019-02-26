@@ -128,9 +128,8 @@ Includes all of the columns above, except SOURCES, NUM_SVTOOLS, SVTYPE and ANN, 
 ## Result dir structure:
 project(family)_ID:
 - bcbio-align: config and final dirs from bcbio align-decoy run
-- bcbio-small-variants: bcbio configs and vcfs from bcbio small variant/cre
+- bcbio-small-variants: bcbio configs and vcfs from bcbio small variant, output of cre for coding report
 - bcbio-sv: SV output from bcbio
-- coding: coding cre dir
 - genes: HPO, gene list, bed file
 - panel: non-coding report for gene panel cre dir
 - panel-flank100k: non-coding report for gene panel +100k flank cre dir
