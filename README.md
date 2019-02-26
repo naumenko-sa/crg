@@ -125,6 +125,19 @@ Includes all of the columns above, except SOURCES, NUM_SVTOOLS, SVTYPE and ANN, 
 - SAMPLE_details: what are the SV's in this sample which overlap with the reference?
 - SAMPLE_GENOTYPE
 
+## Result dir structure:
+project(family)_ID:
+- bcbio-align: config and final dirs from bcbio align-decoy run
+- bcbio-small-variants: bcbio configs and vcfs from bcbio small variant/cre
+- bcbio-sv: SV output from bcbio
+- coding: coding cre dir
+- genes: HPO, gene list, bed file
+- panel: non-coding report for gene panel cre dir
+- panel-flank100k: non-coding report for gene panel +100k flank cre dir
+- reports: csv report we send
+- tcag: tcag analysis
+- bam and bai files (without ready) - in the top directory to for easy access, bams from align-decoy step!
+
 ## Use case: compared SV calls from TCAG (ERDS) to MetaSV
 ```
 bcftools view -i 'ALT="<DEL>"' 159_CH0315.pass.vcf.gz | bcftools query -f '%CHROM\t%POS\t%INFO/END\n' -o 159.metasv.del.bed
