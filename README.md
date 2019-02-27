@@ -17,17 +17,16 @@
 	 where N = number of projects.
   * To speed up the process, run one project per sample.
 
-2. Remove decoy reads: `qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`. Keep original bam with decoy reads to store all data.
+2. Remove decoy reads: `qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`. Keep original bam with decoy reads to store all data. Some SV callers (manta) are sensitive to reads mapped to decoy even with one mate.
 
 3. Call small variants
  	* Create a project dir: `mkdir -p project/input`
- 	* Move bam file(s) from step1 to project/input: project_sample.bam 
+ 	* Symlink bam file(s) from step1 to project/input: project_sample.bam Small variant calling is not sensitive to the presense of decoy reads.
  	* Create bcbio project: `crg.prepare_bcbio_run.sh project no_align`
 	* Run bcbio:  `qsub ~/cre/bcbio.pbs -v project=project`
+	* Clean up bcbio project: `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
-4. Clean up bcbio run: `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
-
-5. Create excel reports for small variants.
+4. Create excel reports for small variants.
 	* coding report: `qsub ~/cre/cre.sh -v family=project`
 	* noncoding variants for gene panels: 
 		- subset variants: `bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`
@@ -38,13 +37,14 @@
 		- proceed as for noncoding small variant report
 	* de-novo variants for trios
 
-6. Call structural variants (in parallel with steps 3-5)
-    * Create a project dir: `mkdir -p project/input`
-    * Symlink bam file(s) from step 2to project/input: project_sample.bam.
+5. Call structural variants (in parallel with steps 3-5)
+    * MetaSV calls spades - a genome assembler, for every SV, making bcbio run computationally intensive. To speed up use sv_regions.bed and call samples individually. They are combined downstream during report generation.
+    * Create project dir: `mkdir -p project/input`
+    * Symlink a bam file. from step 2 to project/input: project_sample.bam. Some 
     * Create bcbio project: `crg.prepare_bcbio_run project sv project/input/sv_regions.bed
     * Run bcbio: `qsub ~/cre/bcbio.pbs -v project=project`
 
-7. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
+6. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
 	* Navigate to `project/sv`
 	* Report on SV's occuring in each sample: 
 		- Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder. 
