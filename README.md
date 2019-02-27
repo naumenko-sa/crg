@@ -13,15 +13,18 @@
 1. Align reads vs GRCh37 reference with decoy
 	* Create a project(=case=family) dir:\
 	`mkdir -p project/input`
-	* Copy/symlink input file(s) to project/input:  project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
-	* Create bcbio project: `crg.prepare_bcbio_run.sh project align_decoy`
-	* Run bcbio project: `qsub ~/cre/bcbio.pbs -v project=project`\
-	  For multiple projects create list of projects in projects.txt and run `qsub -t 1-N ~/cre/bcbio.array.pbs`\
-	  where N = number of projects.
+	* Copy/symlink input file(s) to project/input: project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
+	* Create bcbio project:\
+	`crg.prepare_bcbio_run.sh project align_decoy`
+	* Run bcbio project:\
+	`qsub ~/cre/bcbio.pbs -v project=project`\
+	For multiple projects create list of projects in projects.txt and run\
+	`qsub -t 1-N ~/cre/bcbio.array.pbs`\
+	where N = number of projects.
 	* To speed up the process, run one project per sample.
 
-2. Remove decoy reads: 
-`qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`. 
+2. Remove decoy reads:\
+`qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`.\
 Keep original bam with decoy reads to store all data. Some SV callers (manta) are sensitive to reads mapped to decoy even with one mate.
 
 3. Call small variants
