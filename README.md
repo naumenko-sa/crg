@@ -25,33 +25,46 @@
 
 2. Remove decoy reads:\
 `qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`.\
-Keep original bam with decoy reads to store all data. Some SV callers (manta) are sensitive to reads mapped to decoy even with one mate.
+Keep original bam with decoy reads to store all data.\
+Some SV callers (manta) are sensitive to reads mapped to decoy even with one mate.
 
 3. Call small variants
- 	* Create a project dir: `mkdir -p project/input`
+ 	* Create a project dir:\
+ 	`mkdir -p project/input`
  	* Symlink bam file(s) from step1 to project/input: project_sample.bam Small variant calling is not sensitive to the presense of decoy reads.
- 	* Create bcbio project: `crg.prepare_bcbio_run.sh project no_align`
-	* Run bcbio:  `qsub ~/cre/bcbio.pbs -v project=project`
-	* Clean up bcbio project: `qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
+ 	* Create bcbio project:\
+ 	`crg.prepare_bcbio_run.sh project no_align`
+	* Run bcbio:\
+	`qsub ~/cre/bcbio.pbs -v project=project`
+	* Clean up bcbio project:\
+	`qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
 4. Create excel reports for small variants.
-	* coding report: `qsub ~/cre/cre.sh -v family=project`
+	* coding report:\
+	`qsub ~/cre/cre.sh -v family=project`
 	* noncoding variants for gene panels: 
-		- subset variants: `bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`
-		- reannotate variants in panels and create gemini.db: `qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
-		- build report: `qsub ~/cre/cre.sh -f family=project,type=wgs`
+		- subset variants:\
+		`bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`
+		- reannotate variants in panels and create gemini.db:\
+		`qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
+		- build report:\
+		`qsub ~/cre/cre.sh -f family=project,type=wgs`
 	* noncoding variants for gene panels with flank
-		- modify bed file, add 100k bp to each gene start and end: `cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000'`
+		- modify bed file, add 100k bp to each gene start and end:\
+		`cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000'`
 		- proceed as for noncoding small variant report
 	* de-novo variants for trios
 
 5. Call structural variants (in parallel with step 3)
-    * MetaSV calls spades - a genome assembler, for every SV, making bcbio run computationally intensive. To speed up use sv_regions.bed and call samples individually. They are combined downstream during report generation.
-    * Create project dir: `mkdir -p project/input`
-    * Symlink a bam file. from step 2 to project/input: project_sample.bam.
-    * Copy 
-    * Create bcbio project: `crg.prepare_bcbio_run.sh project sv project/input/sv_regions.bed
-    * Run bcbio: `qsub ~/cre/bcbio.pbs -v project=project`
+	* MetaSV calls spades - a genome assembler, for every SV, making bcbio run computationally intensive. To speed up use sv_regions.bed and call samples individually. They are combined downstream during report generation.
+	* Create project dir:\
+	`mkdir -p project/input`
+	* Symlink a bam file. from step 2 to project/input: project_sample.bam.
+	* Copy project.bed to project.input
+	* Create bcbio project:\
+	`crg.prepare_bcbio_run.sh project sv project/input/sv_regions.bed`
+	* Run bcbio:\
+	`qsub ~/cre/bcbio.pbs -v project=project`
 
 6. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
 	* Navigate to `project/sv`
