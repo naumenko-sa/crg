@@ -1,6 +1,7 @@
 # no realignment and recalibration
 # alignment vs decoy
 # quality control
+# no variant calling
 details:
 - algorithm:
     aligner: bwa

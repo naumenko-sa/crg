@@ -3,6 +3,11 @@
   * crg and crt cloned to ~/crg and ~/crt and added to PATH.
 
 # Usage
+
+0. Create a bed file for small and structural variants prioritization
+* request a list of ensembl_ids for genes
+* use [genes.R](https://github.com/naumenko-sa/bioscripts/blob/master/genes.R)
+
 1. Align reads vs GRCh37 reference with decoy
   * Create a project(=case=family) dir: `mkdir -p project/input`
   * Copy/symlink input file(s) to project/input:  project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
@@ -14,7 +19,7 @@
 
 2. Remove decoy reads: `qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`. Keep original bam with decoy reads to store all data.
 
-3. Call small and structural variants
+3. Call small variants
  	* Create a project dir: `mkdir -p project/input`
  	* Move bam file(s) from step1 to project/input: project_sample.bam 
  	* Create bcbio project: `crg.prepare_bcbio_run.sh project no_align`
@@ -25,7 +30,6 @@
 5. Create excel reports for small variants.
 	* coding report: `qsub ~/cre/cre.sh -v family=project`
 	* noncoding variants for gene panels: 
-		- create a bed file for a set of genes with [genes.R](~/bioscripts/genes.R)
 		- subset variants: `bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`
 		- reannotate variants in panels and create gemini.db: `qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
 		- build report: `qsub ~/cre/cre.sh -f family=project,type=wgs`
@@ -34,7 +38,13 @@
 		- proceed as for noncoding small variant report
 	* de-novo variants for trios
 
-6. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
+6. Call structural variants (in parallel with steps 3-5)
+    * Create a project dir: `mkdir -p project/input`
+    * Symlink bam file(s) from step 2to project/input: project_sample.bam.
+    * Create bcbio project: `crg.prepare_bcbio_run project sv project/input/sv_regions.bed
+    * Run bcbio: `qsub ~/cre/bcbio.pbs -v project=project`
+
+7. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
 	* Navigate to `project/sv`
 	* Report on SV's occuring in each sample: 
 		- Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder. 
