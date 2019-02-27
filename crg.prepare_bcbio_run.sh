@@ -11,6 +11,7 @@ echo "family="$family
 # -align_decoy
 # -cnvkit
 # -sv: no align, bam has to be cleaned after aligning to decoy, call SV, use a bed file for SV regions
+# -small_variants
 # -validate
 analysis=$2
 
