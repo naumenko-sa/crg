@@ -62,7 +62,7 @@ Some SV callers (manta) are sensitive to reads mapped to decoy even with one mat
 	* Symlink a bam file. from step 2 to project/input: project_sample.bam.
 	* Copy project.bed to project.input
 	* Create bcbio project:\
-	`crg.prepare_bcbio_run.sh project sv project/input/sv_regions.bed`
+	`crg.prepare_bcbio_run.sh project sv project/input/sv_regions.bed`\
 	* Run bcbio:\
 	`qsub ~/cre/bcbio.pbs -v project=project`
 

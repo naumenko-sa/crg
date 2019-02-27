@@ -1,8 +1,7 @@
 details:
 - algorithm:
-    aligner: bwa
-    effects: vep
-    effects_transcripts: all
+    aligner: false
+    effects: false
     realign: false
     recalibrate: false
     remove_lcr: false
@@ -11,17 +10,12 @@ details:
     svcaller: [lumpy, manta, cnvkit, metasv, wham]
     sv_regions: svregions
     tools_on:
-    - gemini
     - svplots
     - qualimap
-    - vep_splicesite_annotations
     - noalt_calling
     tools_off:
     - vqsr
-    variantcaller:
-    - gatk-haplotype
-    vcfanno:
-    - /home/naumenko/crg/crg.vcfanno.conf
+    variantcaller: false
   analysis: variant2
   description: 'project_sample'
   files:

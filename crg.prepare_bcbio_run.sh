@@ -1,19 +1,25 @@
 #!/bin/bash
 
 # prepares family for bcbio run when input files are family_sample.bam or family_sample_1/2.fq.gz
+echo "Parameters:"
 family=$1
 
-# config:
+echo "family="$family
+# analysis:
 # -default
 # -noalign
 # -align_decoy
 # -cnvkit
 # -sv: no align, bam has to be cleaned after aligning to decoy, call SV, use a bed file for SV regions
 # -validate
-config=$2
+analysis=$2
+
+echo "analysis="$analysis
 
 #bed file for SV calling
 bed=$3
+
+echo "bed="$bed
 
 cd $family
 
@@ -33,11 +39,13 @@ do
 done < samples.txt
 
 #default template
-config=~/crg/config/crg.bcbio.default.yaml
+template=~/crg/config/crg.bcbio.default.yaml
 if [ -n "$2" ]
 then
-    config=~/crg/config/crg.bcbio.$2.yaml
+    template=~/crg/config/crg.bcbio.$2.yaml
 fi
+
+echo "Using config template: " $template
 
 bcbio_nextgen.py -w template $template $family.csv input/*
 
@@ -47,3 +55,14 @@ rm $family.csv
 rmdir $family
 
 cd ..
+
+if [ $analysis == "sv" ]
+then
+    bed_fullpath=`readlink -f $bed`
+    cd $family/config
+    mv $family.yaml $family.tmp.yaml
+    echo "Using bed file at: " $bed_fullpath
+    cat $family.tmp.yaml | sed "s|svregions|$bed_fullpath|" > $family.yaml
+    cd ../../
+fi
+
