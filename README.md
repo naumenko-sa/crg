@@ -5,19 +5,23 @@
 # Usage
 
 0. Create a bed file for small and structural variants prioritization
-* request a list of ensembl_ids for genes
-* use [genes.R](https://github.com/naumenko-sa/bioscripts/blob/master/genes.R)
+	* request a list of ensembl_ids for genes
+	* use [genes.R](https://github.com/naumenko-sa/bioscripts/blob/master/genes.R)
+	* sort and merge with bedtools
+	* result is project.bed
 
 1. Align reads vs GRCh37 reference with decoy
-  * Create a project(=case=family) dir: `mkdir -p project/input`
-  * Copy/symlink input file(s) to project/input:  project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
-  * Create bcbio project: `crg.prepare_bcbio_run.sh project align_decoy`
-  * Run bcbio project: `qsub ~/cre/bcbio.pbs -v project=project`\
-	For multiple projects create list of projects in projects.txt and run `qsub -t 1-N ~/cre/bcbio.array.pbs`\
-	 where N = number of projects.
-  * To speed up the process, run one project per sample.
+	* Create a project(=case=family) dir: `mkdir -p project/input`
+	* Copy/symlink input file(s) to project/input:  project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
+	* Create bcbio project: `crg.prepare_bcbio_run.sh project align_decoy`
+	* Run bcbio project: `qsub ~/cre/bcbio.pbs -v project=project`\
+	  For multiple projects create list of projects in projects.txt and run `qsub -t 1-N ~/cre/bcbio.array.pbs`\
+	  where N = number of projects.
+	* To speed up the process, run one project per sample.
 
-2. Remove decoy reads: `qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`. Keep original bam with decoy reads to store all data. Some SV callers (manta) are sensitive to reads mapped to decoy even with one mate.
+2. Remove decoy reads: 
+`qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`. 
+Keep original bam with decoy reads to store all data. Some SV callers (manta) are sensitive to reads mapped to decoy even with one mate.
 
 3. Call small variants
  	* Create a project dir: `mkdir -p project/input`
@@ -37,11 +41,12 @@
 		- proceed as for noncoding small variant report
 	* de-novo variants for trios
 
-5. Call structural variants (in parallel with steps 3-5)
+5. Call structural variants (in parallel with step 3)
     * MetaSV calls spades - a genome assembler, for every SV, making bcbio run computationally intensive. To speed up use sv_regions.bed and call samples individually. They are combined downstream during report generation.
     * Create project dir: `mkdir -p project/input`
-    * Symlink a bam file. from step 2 to project/input: project_sample.bam. Some 
-    * Create bcbio project: `crg.prepare_bcbio_run project sv project/input/sv_regions.bed
+    * Symlink a bam file. from step 2 to project/input: project_sample.bam.
+    * Copy 
+    * Create bcbio project: `crg.prepare_bcbio_run.sh project sv project/input/sv_regions.bed
     * Run bcbio: `qsub ~/cre/bcbio.pbs -v project=project`
 
 6. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
