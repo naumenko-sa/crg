@@ -11,7 +11,7 @@
 	* result is project.bed
 
 1. Align reads vs GRCh37 reference with decoy
-	* Create a project(=case=family) dir: `mkdir -p project/input`
+	* Create a project(=case=family) dir:  `mkdir -p project/input`
 	* Copy/symlink input file(s) to project/input:  project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
 	* Create bcbio project: `crg.prepare_bcbio_run.sh project align_decoy`
 	* Run bcbio project: `qsub ~/cre/bcbio.pbs -v project=project`\
