@@ -1,6 +1,6 @@
-# HuRef SVs
+# Validation of structural variant calling in bcbio using HuRef benchmark
 
-Benchmark (DEL calls): http://www.cell.com/action/showImagesData?pii=S0002-9297%2817%2930496-2
+Benchmark (DEL calls): http://www.cell.com/action/showImagesData?pii=S0002-9297%2817%2930496-2\ 
 Raw data: https://www.ncbi.nlm.nih.gov/sra/SRX5395595[accn]
 
 ## Prepare input data:
