@@ -8,7 +8,6 @@ details:
     mark_duplicates: true
     save_diskspace: true
     svcaller: [lumpy, manta, cnvkit, metasv, wham]
-    sv_regions: svregions
     tools_on:
     - svplots
     - qualimap

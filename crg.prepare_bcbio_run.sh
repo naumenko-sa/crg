@@ -17,11 +17,6 @@ analysis=$2
 
 echo "analysis="$analysis
 
-#bed file for SV calling
-bed=$3
-
-echo "bed="$bed
-
 cd $family
 
 cp ~/cre/bcbio.sample_sheet_header.csv $family.csv
@@ -56,14 +51,3 @@ rm $family.csv
 rmdir $family
 
 cd ..
-
-if [ $analysis == "sv" ]
-then
-    bed_fullpath=`readlink -f $bed`
-    cd $family/config
-    mv $family.yaml $family.tmp.yaml
-    echo "Using bed file at: " $bed_fullpath
-    cat $family.tmp.yaml | sed "s|svregions|$bed_fullpath|" > $family.yaml
-    cd ../../
-fi
-

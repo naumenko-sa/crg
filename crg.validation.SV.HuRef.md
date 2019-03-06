@@ -3,7 +3,7 @@
 Benchmark (DEL calls): http://www.cell.com/action/showImagesData?pii=S0002-9297%2817%2930496-2\ 
 Raw data: https://www.ncbi.nlm.nih.gov/sra/SRX5395595[accn]
 
-## Prepare input data:
+## 1. Prepare input data:
 ```
 module load sratoolkit
 prefetch -c SRR8595488 --max-size 60GB
