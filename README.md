@@ -6,7 +6,9 @@
 
 0. Create a bed file for small and structural variants prioritization
 	* request a list of ensembl_ids for genes
-	* use [genes.R](https://github.com/naumenko-sa/bioscripts/blob/master/genes.R)
+	* if a gene list comes from Phetotips:
+```Rscript ~/bioscripts/genes.R phenotips_hpo2gene_coordinates 1153_CH0769_HPO.tsv```. Stringr should be >=1.4.
+	* or use [genes.R](https://github.com/naumenko-sa/bioscripts/blob/master/genes.R) in a custom case
 	* sort and merge with bedtools
 	* result is project.bed
 
