@@ -7,6 +7,7 @@
 export PATH=/path/bcbio/anaconda/bin:$PATH
 export PYTHONPATH=/path/bcbio/anaconda/lib/python2.7
 ```
+
 # 2. Create a bed file for prioritization of small and structural variants
 	* request a list of ensembl_ids for genes
 	* if a gene list comes from Phetotips:\
