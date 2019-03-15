@@ -40,7 +40,7 @@ Some SV callers (manta) are sensitive to reads mapped to decoy even with one mat
  	`mkdir -p project/input`
  	* Symlink bam file(s) from step1 to project/input: project_sample.bam Small variant calling is not sensitive to the presense of decoy reads.
  	* Create bcbio project:\
- 	`crg.prepare_bcbio_run.sh project no_align`
+ 	`crg.prepare_bcbio_run.sh project small_variants`
 	* Run bcbio:\
 	`qsub ~/cre/bcbio.pbs -v project=project`
 	* Clean up bcbio project:\
@@ -55,10 +55,10 @@ Some SV callers (manta) are sensitive to reads mapped to decoy even with one mat
 		- reannotate variants in panels and create gemini.db:\
 		`qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
 		- build report:\
-		`qsub ~/cre/cre.sh -f family=project,type=wgs`
+		`qsub ~/cre/cre.sh -v family=project,type=wgs`
 	* noncoding variants for gene panels with flank
 		- modify bed file, add 100k bp to each gene start and end:\
-		`cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000'`
+		`cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000}'`
 		- proceed as for noncoding small variant report
 	* de-novo variants for trios
 
