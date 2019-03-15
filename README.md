@@ -10,7 +10,7 @@ export PYTHONPATH=/path/bcbio/anaconda/lib/python2.7
 
 # 2. Create a bed file for prioritization of small and structural variants
 1. Good sources of gene panels are: [Panel App from Genomics England](https://panelapp.genomicsengland.co.uk/) and [Gene panel app from iobio.io](https://genepanel.iobio.io/).
-2. If gene list comes from Phetotips:\
+2. If gene list comes from Phenotips:\
 ```Rscript ~/bioscripts/genes.R phenotips_hpo2gene_coordinates phenotips_hpo.tsv```. Stringr should be >=1.4.
 3. Or use [genes.R](https://github.com/naumenko-sa/bioscripts/blob/master/genes.R) in a custom case
 4. Some genes might be missing (they don't have ENS IDs in phenotips tsv file, they are reported by script, you can try ~/cre/data/missing_genes_grch37.bed or GeneCards/Ensembl resources to find them).
@@ -21,21 +21,20 @@ export PYTHONPATH=/path/bcbio/anaconda/lib/python2.7
 ```
 6. result is project.bed
 
-
 # 3. Align reads vs GRCh37 reference with decoy
-	* Create a project(=case=family) dir:\
-	`mkdir -p project/input`
-	* Copy/symlink input file(s) to project/input: project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
-	* Create bcbio project:\
-	`crg.prepare_bcbio_run.sh project align_decoy`
-	* Run bcbio project:\
-	`qsub ~/cre/bcbio.pbs -v project=project`\
-	For multiple projects create list of projects in projects.txt and run\
-	`qsub -t 1-N ~/cre/bcbio.array.pbs`\
-	where N = number of projects.
-	* To speed up the process, run one project per sample.
+1. Create a project(=case=family) dir:\
+`mkdir -p project/input`
+2. Copy/symlink input file(s) to project/input: project_sample.bam, or project_sample_1.fq.gz and project_sample_2.fq.gz
+3. Create bcbio project:\
+`crg.prepare_bcbio_run.sh project align_decoy`
+4. Run bcbio project:\
+`qsub ~/cre/scripts/bcbio.pbs -v project=project`\
+5. For multiple projects create a list of projects in projects.txt and run:\
+`qsub -t 1-N ~/cre/scripts/bcbio.array.pbs`\
+where N = number of projects.
+6. To speed up the process, run one project per sample.
 
-# 4. Remove decoy reads:\
+# 4. Remove decoy reads
 `qsub ~/cre/cre.bam.remove_decoy_reads.sh -v bam=$bam`.\
 Keep original bam with decoy reads to store all data.\
 Some SV callers (manta) are sensitive to reads mapped to decoy even with one mate.
