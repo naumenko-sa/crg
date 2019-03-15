@@ -9,20 +9,18 @@ export PYTHONPATH=/path/bcbio/anaconda/lib/python2.7
 ```
 
 # 2. Create a bed file for prioritization of small and structural variants
-	* request a list of ensembl_ids for genes
-	* if a gene list comes from Phetotips:\
+1. Good sources of gene panels are: [Panel App from Genomics England](https://panelapp.genomicsengland.co.uk/) and [Gene panel app from iobio.io](https://genepanel.iobio.io/).
+2. If gene list comes from Phetotips:\
 ```Rscript ~/bioscripts/genes.R phenotips_hpo2gene_coordinates phenotips_hpo.tsv```. Stringr should be >=1.4.
-	* or use [genes.R](https://github.com/naumenko-sa/bioscripts/blob/master/genes.R) in a custom case
-	* Some genes might be missing (don't have ENS IDs in a phenotips tsv file, they are reported by script, you can try ~/cre/data/missing_genes_grch37.bed or GeneCards/Ensembl resources to find them).
-	* sort and merge with bedtools\
-	```
+3. Or use [genes.R](https://github.com/naumenko-sa/bioscripts/blob/master/genes.R) in a custom case
+4. Some genes might be missing (they don't have ENS IDs in phenotips tsv file, they are reported by script, you can try ~/cre/data/missing_genes_grch37.bed or GeneCards/Ensembl resources to find them).
+5. Sort and merge with bedtools\
+```
 	bedtools sort -i unsorted.bed > sorted.bed
 	bedtools merge -i sorted.bed > project.bed
-	```
-	* result is project.bed
-	* Good sources of gene panels are:
-		* [Panel App from Genomics England](https://panelapp.genomicsengland.co.uk/)
-		* [Gene panel app from iobio.io](https://genepanel.iobio.io/)
+```
+6. result is project.bed
+
 
 # 3. Align reads vs GRCh37 reference with decoy
 	* Create a project(=case=family) dir:\
