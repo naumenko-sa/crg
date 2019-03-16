@@ -81,12 +81,12 @@ sv_regions parameter in bcbio works only for wham.
 # 8. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
 1. Navigate to `project/sv`
 2. Report on SV's occuring in each sample: 
-	2.1 Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder. 
-	2.2 *Optional* crg.sv.prioritize.sh will produce a `sample.tsv` file. Send to TCAG to annotate with DGV frequency. Otherwise, this column will show up as NA. 
-	Run `crg.sv.prioritize.sh sample panel.bed tcag_annotated_file.tsv` to produce this report.
-3. Report on SV's across multiple samples: 
-	3.2 Gather each report from the previous step in to a single directory.
-	3.3 Run: `crg.intersect_sv_reports.sh project` to produce a single report summarizing structural variants across all samples.
+2.1 Run: `crg.sv.prioritize.sh sample panel.bed` on the metasv.vcf.gz file in each sample's folder. \
+2.2 *Optional* crg.sv.prioritize.sh will produce a `sample.tsv` file. Send to TCAG to annotate with DGV frequency. Otherwise, this column will show up as NA. \
+2.3 Run `crg.sv.prioritize.sh sample panel.bed tcag_annotated_file.tsv` to produce this report.
+3. Report on SV's across multiple samples:\
+3.2 Gather each report from the previous step in to a single directory.\
+3.3 Run: `crg.intersect_sv_reports.sh project` to produce a single report summarizing structural variants across all samples.
 
 ## AnnotSV
 [AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
