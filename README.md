@@ -40,51 +40,53 @@ Keep original bam with decoy reads to store all data.\
 Some SV callers (manta) are sensitive to reads mapped to decoy even with one mate.
 
 # 5. Call small variants
- 	* Create a project dir:\
- 	`mkdir -p project/input`
- 	* Symlink bam file(s) from step1 to project/input: project_sample.bam Small variant calling is not sensitive to the presense of decoy reads.
- 	* Create bcbio project:\
- 	`crg.prepare_bcbio_run.sh project small_variants`
-	* Run bcbio:\
-	`qsub ~/cre/bcbio.pbs -v project=project`
-	* Clean up bcbio project:\
-	`qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
+1. Create a project dir:\
+`mkdir -p project/input`
+2. Symlink bam file(s) from step1 to project/input: project_sample.bam Small variant calling is not sensitive to the presense of decoy reads.
+3. Create bcbio project:\
+`crg.prepare_bcbio_run.sh project small_variants`
+4. Run bcbio:\
+`qsub ~/cre/bcbio.pbs -v project=project`
+5. Clean up bcbio project:\
+`qsub ~/cre/cre.sh -v family=<project>,cleanup=1,make_report=0,type=wgs`
 
 # 6. Create excel reports for small variants.
-	* coding report:\
-	`qsub ~/cre/cre.sh -v family=project`
-	* noncoding variants for gene panels: 
-		- subset variants:\
-		`bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`
-		- reannotate variants in panels and create gemini.db:\
-		`qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
-		- build report:\
-		`qsub ~/cre/cre.sh -v family=project,type=wgs`
-	* noncoding variants for gene panels with flank
-		- modify bed file, add 100k bp to each gene start and end:\
-		`cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000}'`
-		- proceed as for noncoding small variant report
-	* de-novo variants for trios
+1. coding report:\
+`qsub ~/cre/cre.sh -v family=project`
+2. noncoding variants for gene panels: 
+	2.1 subset variants:\
+	`bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`
+	2.2 reannotate variants in panels and create gemini.db:\
+	`qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project `
+	2.3 build report:\
+	`qsub ~/cre/cre.sh -v family=project,type=wgs`
+3. noncoding variants for gene panels with flank
+	3.1 modify bed file, add 100k bp to each gene start and end:\
+	`cat panel.bed | awk -F "\t" '{print $1"\t"$2-100000"\t"$3+100000}'`
+	3.2 proceed as for noncoding small variant report
+4. de-novo variants for trios
 
 # 7. Call structural variants (in parallel with step 3)
-	* MetaSV calls spades - a genome assembler, for every SV, making bcbio run computationally intensive. To speed up use sv_regions.bed and call samples individually. They are combined downstream during report generation.
-	* Create project dir:\
-	`mkdir -p project/input`
-	* Symlink a bam file. from step 2 to project/input: project_sample.bam.
-	* Copy project.bed to project.input
-	* Create bcbio project:\
-	`crg.prepare_bcbio_run.sh project sv project/input/sv_regions.bed`\
-	* Run bcbio:\
-	`qsub ~/cre/bcbio.pbs -v project=project`
+1. MetaSV uses spades (a genome assembler) for every SV, making bcbio run computationally intensive. To speed up call samples individually.\
+sv_regions parameter in bcbio works only for wham.
+2. Create project dir:\
+`mkdir -p project/input`
+3. Symlink a bam file. from step 2 to project/input: project_sample.bam.
+3. Copy project.bed to project.input
+4. Create bcbio project:\
+`crg.prepare_bcbio_run.sh project sv project/input/sv_regions.bed`\
+5. Run bcbio:\
+`qsub ~/cre/bcbio.pbs -v project=project`
 
 # 8. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
-	* Navigate to `project/sv`
-	* Report on SV's occuring in each sample: 
-		- Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder. 
-		- *Optional* crg.sv.prioritize.sh will produce a `sample.tsv` file. A contact in TCAG can annotate this file to add an additional column to the sample's SV report, DGV. Otherwise, this column will show up as NA. Run `crg.sv.prioritize.sh sample panel.bed tcag_annotated_file.tsv` to produce this report.
-	* Report on SV's across multiple samples: 
-		- Gather each report from the previous step in to a single directory
-		- Run: `crg.intersect_sv_reports.sh project` to produce a single report summarizing structural variants across all samples
+1. Navigate to `project/sv`
+2. Report on SV's occuring in each sample: 
+	2.1 Run: `crg.sv.prioritize.sh sample panel.bed` on the *-metasv.vcf.gz file in each sample's folder. 
+	2.2 *Optional* crg.sv.prioritize.sh will produce a `sample.tsv` file. Send to TCAG to annotate with DGV frequency. Otherwise, this column will show up as NA. 
+	Run `crg.sv.prioritize.sh sample panel.bed tcag_annotated_file.tsv` to produce this report.
+3. Report on SV's across multiple samples: 
+	3.2 Gather each report from the previous step in to a single directory.
+	3.3 Run: `crg.intersect_sv_reports.sh project` to produce a single report summarizing structural variants across all samples.
 
 ## AnnotSV
 [AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
