@@ -14,3 +14,7 @@ Result
 38G	huref_blood1_1.fq.gz
 42G	huref_blood1_2.fq.gz
 ```
+
+## 2. Align to grch37 with decoy
+
+## 3. Filter out decoy reads

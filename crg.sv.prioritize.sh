@@ -29,7 +29,7 @@ fi
 #get only PASS calls
 sample=`bcftools query -l ${case}-metasv.vcf.gz`
 
-bcftools view -f .,PASS -o $sample.pass.vcf.gz -Oz ${case}-metasv.vcf.gz
+bcftools view -f PASS -o $sample.pass.vcf.gz -Oz ${case}-metasv.vcf.gz
 tabix $sample.pass.vcf.gz
 
 bedtools intersect -a $sample.pass.vcf.gz -b $panel -header -u > $sample.pass.region.vcf
