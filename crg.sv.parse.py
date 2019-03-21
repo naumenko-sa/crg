@@ -63,11 +63,14 @@ with open(vcf) as f_vcf:
 
 	    key = values[0]+'-'+values[1]+'-'+info_dict['END']
 	    #print(key+"\t"+dgv_dict[key])
-	    if key in dgv_dict:
-		info_dict['DGV'] = dgv_dict[key]
+	    if dgv_dict:
+		if key in dgv_dict:
+		    info_dict['DGV'] = dgv_dict[key]
+    		else:
+		    info_dict['DGV'] = '0'
 	    else:
 		info_dict['DGV'] = '0'
-	    
+
 	    if len(sys.argv) > 2:
 		values.append(info_dict['DGV'])
 	    else:
