@@ -17,4 +17,39 @@ Result
 
 ## 2. Align to grch37 with decoy
 
+```
+details:
+- algorithm:
+    aligner: bwa
+    effects: false
+    mark_duplicates: true
+    realign: false
+    recalibrate: false
+    save_diskspace: true
+    tools_on:
+    - svplots
+    - qualimap
+    variantcaller: false
+  analysis: variant2
+  description: huref_blood1
+  files:
+  - /hpf/largeprojects/ccmbio/naumenko/validation/2019-03-05_HuRef_SV/huref/input/huref_blood1_1.fq.gz
+  - /hpf/largeprojects/ccmbio/naumenko/validation/2019-03-05_HuRef_SV/huref/input/huref_blood1_2.fq.gz
+  genome_build: GRCh37d5
+  metadata:
+    batch: huref
+fc_name: huref
+resources:
+  default:
+    cores: 7
+    jvm_opts:
+    - -Xms750m
+    - -Xmx7000m
+    memory: 7G
+upload:
+  dir: ../final
+```
+
 ## 3. Filter out decoy reads
+
+[cre.bam.remove_decoy_reads.sh](https://github.com/naumenko-sa/cre/blob/master/cre.bam.remove_decoy_reads.sh)
