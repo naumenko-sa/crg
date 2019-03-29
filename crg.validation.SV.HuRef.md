@@ -18,3 +18,4 @@ Result
 ## 2. Align to grch37 with decoy
 
 ## 3. Filter out decoy reads
+
