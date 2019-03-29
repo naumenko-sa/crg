@@ -77,15 +77,17 @@ sv_regions parameter in bcbio works only for wham.
 5. Run bcbio:\
 `qsub ~/cre/bcbio.pbs -v project=project`
 
-# 8. Create excel reports for structural variants  ([Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing))
-1. Navigate to `project/sv`
-2. Report on SV's occuring in each sample: 
-2.1 Run: `crg.sv.prioritize.sh sample panel.bed` on the metasv.vcf.gz file in each sample's folder. \
-2.2 *Optional* crg.sv.prioritize.sh will produce a `sample.tsv` file. Send to TCAG to annotate with DGV frequency. Otherwise, this column will show up as NA. \
-2.3 Run `crg.sv.prioritize.sh sample panel.bed tcag_annotated_file.tsv` to produce this report.
-3. Report on SV's across multiple samples:\
-3.2 Gather each report from the previous step in to a single directory.\
-3.3 Run: `crg.intersect_sv_reports.sh project` to produce a single report summarizing structural variants across all samples.
+# 8. Excel report for structural variants 
+1. [Report columns](https://docs.google.com/document/d/1o870tr0rcshoae_VkG1ZOoWNSAmorCZlhHDpZuZogYE/edit?usp=sharing)
+2. `cd project/sv`
+3. Generate per sample reports: \
+3.1 `cd <sample_dir>`\
+3.2 `qsub ~/crg/crg.sv.prioritize.sh -v case=<project>,panel=<panel.bed>`\
+Also outputs sample.tsv file for annotation in TCAG with DGV frequencies.\
+3.3 (Optional) `crg.sv.prioritize.sh <project> panel.bed tcag_annotated_file.tsv` to incorporate DGV frequencies.
+4. Combine reports from multiple samples:\
+4.1 Gather each report from the previous step in to a single directory.\
+4.3 `crg.intersect_sv_reports.sh project`.
 
 ## AnnotSV
 [AnnotSV](http://lbgi.fr/AnnotSV/) must be set up as apart of the local environment to generate family level reports. Users should set FeaturesOverlap and SVtoAnnOverlap to 50 in the configFile. Because these scripts group SV's which have a 50% recipricol overlap, annotation should follow a similar rule.
