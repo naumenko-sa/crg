@@ -72,9 +72,8 @@ sv_regions parameter in bcbio works only for wham.
 2. Create project dir:\
 `mkdir -p project/input`
 3. Symlink a bam file. from step 2 to project/input: project_sample.bam.
-3. Copy project.bed to project.input
 4. Create bcbio project:\
-`crg.prepare_bcbio_run.sh project sv project/input/sv_regions.bed`\
+`crg.prepare_bcbio_run.sh project sv`\
 5. Run bcbio:\
 `qsub ~/cre/bcbio.pbs -v project=project`
 
