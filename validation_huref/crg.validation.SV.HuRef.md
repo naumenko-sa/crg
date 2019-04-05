@@ -118,9 +118,10 @@ EVENT_SIZES = [(50, 100), (100, 300), (300, 500), (500, 1000), (1000, 10000),
 
 For each tool (except of cnvkit which does not set PASS filter):
 ```
-bcftools query -i 'FILTER="PASS" && SVTYPE="DEL"' -f '%CHROM\t%POS\t%END\n' tool.vcf.gz | grep -v GL  > tool.PASS.DEL.bed
-bedtools merge -i tool.PASS.DEL.bed | awk '{print $0"\t""DEL_tool"}' > tool.PASS.DEL.merged.bed
-crg.sv.validate_bed.py tool.PASS.DEL.merged.bed HuRef.SV.DEL.merged.bed
+export tool=metasv
+bcftools query -i 'FILTER="PASS" && SVTYPE="DEL"' -f '%CHROM\t%POS\t%END\n' $tool.vcf.gz | grep -v GL  > $tool.PASS.DEL.bed
+bedtools merge -i $tool.PASS.DEL.bed | awk -v tl=$tool '{print $0"\t""DEL_"tl}' > $tool.PASS.DEL.merged.bed 
+crg.sv.validate_bed.py $tool.PASS.DEL.merged.bed HuRef.SV.DEL.merged.bed $tool
 ```
 
 Merge all dataframes from all tools and plot the picture:
