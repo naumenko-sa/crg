@@ -109,13 +109,38 @@ By default the overlap reported if there is min 1bp overlap (the equivalent of b
 For deletions using 50% overlap threshold would be more accurate, because events length >> 1bp, i.e. bedtools intersect -u -r 0.5 -R 0.5 -a test.bed -b truth.bed
 Surprisingly, in my test it does not make a big difference, just 15 deletions out of 2668 in GIAB, and it seems that pybedtools does not support parameters -f and -F, so I continued with the default intersect method.
 
+I modified size bins in bcbio/structural/validate.py to be compatible with Trost2018 article:
+```
+EVENT_SIZES = [(50, 100), (100, 300), (300, 500), (500, 1000), (1000, 10000),
+               (10000, 100000), (100000, int(1e6))]
+```
+
 For each tool (except of cnvkit which does not set PASS filter):
 ```
 bcftools query -i 'FILTER="PASS" && SVTYPE="DEL"' -f '%CHROM\t%POS\t%END\n' tool.vcf.gz | grep -v GL  > tool.PASS.DEL.bed
 bedtools merge -i tool.PASS.DEL.bed | awk '{print $0"\t""DEL_tool"}' > tool.PASS.DEL.merged.bed
+crg.sv.validate_bed.py tool.PASS.DEL.merged.bed HuRef.SV.DEL.merged.bed
 ```
 
-I validated deletions with
-https://github.com/naumenko-sa/cre/blob/master/cre.sv.validate_bed.py
-and plotted the picture with
-https://github.com/bcbio/bcbio-nextgen/blob/master/bcbio/structural/validate.py
+Merge all dataframes from all tools and plot the picture:
+```
+cat *.df.csv > del.csv
+python /path/bcbio/anaconda/lib/python2.7/site-packages/bcbio/structural/validate.py del.csv
+```
+
+## 6. Results - 2018
+versions:
+* bcbio-nextgen,1.0.9a0-5e3e041
+* manta,1.3.0
+* lumpy-sv,0.2.13
+* cnvkit,0.9.2a0
+* wham,1.7.0.311
+* metasv,0.4.0
+
+
+
+## 7. Results - 2019
+
+## 8. References
+
+* [Relevant discussion on bcbio github](https://github.com/bcbio/bcbio-nextgen/issues/2313)
