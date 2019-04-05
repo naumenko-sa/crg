@@ -157,7 +157,7 @@ versions:
 
 ![Validation 2019](https://github.com/naumenko-sa/crg/blob/master/huref_sv/validation2019.png)
 
-## 8. Conclusions - gains (+) and losses in sensitivity
+## 8. Conclusions: gains (+) and losses(-) in sensitivity
 
 |Tool|[50,100]|[100,300]|[300,500]|[500,1000]|[1k,10k]|[10k,100k]|[100k,1mln]|total|
 |-|-|-|-|-|-|-|-|-|
