@@ -147,22 +147,20 @@ versions:
 versions:
 * bcbio-nextgen,1.1.2
 * manta,1.5.0
-* manta,1.5.0
 * lumpy-sv,0.2.14a
 * cnvkit,0.9.6a0
 * wham,1.8.0.1.2017.05.03
-* metasv,0.4.0
+* metasv,0.4.0 (=consensus of manta, lumpy, wham, and cnvkit)
 
 ![Validation 2019](https://github.com/naumenko-sa/crg/blob/master/validation_huref/validation2019.png)
 
 ## 8. Conclustions - gains (+) and losses in sensitivity
 
-|Tool|[50,100]|[100,300]|[300,500]|[500,1000]|[1k,10k]|[10k,100k]|[100k,1mln]
-|-|-|-|-|-|-|-|-|
-|cnvkit|0|0|0|0|0|0|0|
+|Tool|[50,100]|[100,300]|[300,500]|[500,1000]|[1k,10k]|[10k,100k]|[100k,1mln]|total|
+|-|-|-|-|-|-|-|-|-|
+|cnvkit|0|0|0|+1|+2|-9|-2|-8|
+|wham|+3|+13|+35|+4|+14|+4|0|+73|
 
-* cnvkit added +1 event in [500, 1000], +2 events in [1k,10k], lost 9 events in [10k,100k], lost 2 events in [100k, 1mln)
-* 
 
 ## 9. References
 
