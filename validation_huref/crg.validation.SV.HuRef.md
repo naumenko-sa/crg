@@ -1,6 +1,6 @@
 # Validation of structural variant (SV) calling in bcbio using HuRef benchmark
 
-Benchmark (DEL calls): http://www.cell.com/action/showImagesData?pii=S0002-9297%2817%2930496-2\  
+Benchmark (DEL calls): http://www.cell.com/action/showImagesData?pii=S0002-9297%2817%2930496-2  
 I used an updated benchmark (personal communication from Brett Trost), which includes calls from PacBio:
 7,952 deletions after bedtools merge, sizes: [50 – 171,021,482].  
 For comparison, GIAB’s NA12878 truth_DEL.merged.bed has 2,668 deletions of [50 - 139,620].
