@@ -139,11 +139,11 @@ versions:
 * cnvkit,0.9.2a0
 * wham,1.7.0.311
 * metasv,0.4.0
+* the alignment was done vs GRCh37 without decoy
 
 ![Validation 2018](https://github.com/naumenko-sa/crg/blob/master/validation_huref/validation2018.png)
 
 ## 7. Results - 2019
-
 versions:
 * bcbio-nextgen,1.1.2
 * manta,1.5.0
@@ -152,6 +152,7 @@ versions:
 * cnvkit,0.9.6a0
 * wham,1.8.0.1.2017.05.03
 * metasv,0.4.0
+* the alignment was done vs GRCh37 with decoy and decoy reads were filtered out
 
 ![Validation 2019](https://github.com/naumenko-sa/crg/blob/master/validation_huref/validation2019.png)
 
