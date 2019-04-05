@@ -155,6 +155,15 @@ versions:
 
 ![Validation 2019](https://github.com/naumenko-sa/crg/blob/master/validation_huref/validation2019.png)
 
-## 8. References
+## 8. Conclustions - gains (+) and losses in sensitivity
+
+|Tool|[50,100]|[100,300]|[300,500]|[500,1000]|[1k,10k]|[10k,100k]|[100k,1mln]
+|-|-|-|-|-|-|-|-|
+|cnvkit|0|0|0|0|0|0|0|
+
+* cnvkit added +1 event in [500, 1000], +2 events in [1k,10k], lost 9 events in [10k,100k], lost 2 events in [100k, 1mln)
+* 
+
+## 9. References
 
 * [Relevant discussion on bcbio github](https://github.com/bcbio/bcbio-nextgen/issues/2313)
