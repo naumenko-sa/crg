@@ -1,4 +1,4 @@
-# Validation of structural variant calling in bcbio using HuRef benchmark
+# Validation of structural variant (SV) calling in bcbio using HuRef benchmark
 
 Benchmark (DEL calls): http://www.cell.com/action/showImagesData?pii=S0002-9297%2817%2930496-2\ 
 Raw data: https://www.ncbi.nlm.nih.gov/sra/SRX5395595[accn]
@@ -33,8 +33,8 @@ details:
   analysis: variant2
   description: huref_blood1
   files:
-  - /hpf/largeprojects/ccmbio/naumenko/validation/2019-03-05_HuRef_SV/huref/input/huref_blood1_1.fq.gz
-  - /hpf/largeprojects/ccmbio/naumenko/validation/2019-03-05_HuRef_SV/huref/input/huref_blood1_2.fq.gz
+  - /path/huref/input/huref_blood1_1.fq.gz
+  - /path/huref/input/huref_blood1_2.fq.gz
   genome_build: GRCh37d5
   metadata:
     batch: huref
@@ -53,3 +53,9 @@ upload:
 ## 3. Filter out decoy reads
 
 [cre.bam.remove_decoy_reads.sh](https://github.com/naumenko-sa/cre/blob/master/cre.bam.remove_decoy_reads.sh)
+
+## 4. Run SV calling (all tools, or each tool in a separate project)
+
+```
+
+```
