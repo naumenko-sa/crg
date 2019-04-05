@@ -153,7 +153,7 @@ versions:
 * wham,1.8.0.1.2017.05.03
 * metasv,0.4.0
 
-![Validation 2019]
+![Validation 2019](https://github.com/naumenko-sa/crg/blob/master/validation_huref/validation2019.png)
 
 ## 8. References
 
