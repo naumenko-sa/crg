@@ -143,7 +143,7 @@ versions:
 * metasv,0.4.0
 * the alignment was done vs GRCh37 without decoy
 
-![Validation 2018](https://github.com/naumenko-sa/crg/blob/master/validation_huref/validation2018.png)
+![Validation 2018](https://github.com/naumenko-sa/crg/blob/master/huref_sv/validation2018.png)
 
 ## 7. Results - 2019
 versions:
@@ -155,7 +155,7 @@ versions:
 * metasv,0.4.0 (=consesnsus of manta, lumpy, wham, and cnvkit)
 * the alignment was done vs GRCh37 with decoy and decoy reads were filtered out
 
-![Validation 2019](https://github.com/naumenko-sa/crg/blob/master/validation_huref/validation2019.png)
+![Validation 2019](https://github.com/naumenko-sa/crg/blob/master/huref_sv/validation2019.png)
 
 ## 8. Conclusions - gains (+) and losses in sensitivity
 
