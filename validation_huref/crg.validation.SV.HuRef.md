@@ -149,15 +149,24 @@ versions:
 versions:
 * bcbio-nextgen,1.1.2
 * manta,1.5.0
-* manta,1.5.0
 * lumpy-sv,0.2.14a
 * cnvkit,0.9.6a0
 * wham,1.8.0.1.2017.05.03
-* metasv,0.4.0
+* metasv,0.4.0 (=consesnsus of manta, lumpy, wham, and cnvkit)
 * the alignment was done vs GRCh37 with decoy and decoy reads were filtered out
 
 ![Validation 2019](https://github.com/naumenko-sa/crg/blob/master/validation_huref/validation2019.png)
 
-## 8. References
+## 8. Conclusions - gains (+) and losses in sensitivity
+
+|Tool|[50,100]|[100,300]|[300,500]|[500,1000]|[1k,10k]|[10k,100k]|[100k,1mln]|total|
+|-|-|-|-|-|-|-|-|-|
+|cnvkit|0|0|0|+1|+2|-9|-2|-8|
+|wham|+3|+13|+35|+4|+14|+4|0|+73|
+|manta|+22|+13|+24|+4|+11|+1|+1|
+|lumpy|-41|-18|-91|+101|+327|+28|+1|+307
+|metasv|-15|-22|-5|-8|-24|-1|0|-75
+
+## 9. References
 
 * [Relevant discussion on bcbio github](https://github.com/bcbio/bcbio-nextgen/issues/2313)
