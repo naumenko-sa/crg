@@ -126,7 +126,8 @@ crg.sv.validate_bed.py $tool.PASS.DEL.merged.bed HuRef.SV.DEL.merged.bed $tool
 
 Merge all dataframes from all tools and plot the picture:
 ```
-cat *.df.csv > del.csv
+head -n1 cnvkit.df.csv > del.csv
+cat *.df.csv | grep -v svtype >> del.csv
 python /path/bcbio/anaconda/lib/python2.7/site-packages/bcbio/structural/validate.py del.csv
 ```
 
@@ -142,6 +143,17 @@ versions:
 ![Validation 2018](https://github.com/naumenko-sa/crg/blob/master/validation_huref/validation2018.png)
 
 ## 7. Results - 2019
+
+versions:
+* bcbio-nextgen,1.1.2
+* manta,1.5.0
+* manta,1.5.0
+* lumpy-sv,0.2.14a
+* cnvkit,0.9.6a0
+* wham,1.8.0.1.2017.05.03
+* metasv,0.4.0
+
+![Validation 2019]
 
 ## 8. References
 
