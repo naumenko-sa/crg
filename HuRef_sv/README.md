@@ -107,7 +107,7 @@ upload:
 
 `_evaluate_one` function in bcbio/structural/validate.py uses pybedtool’s intersect to overlap intervals. 
 By default the overlap reported if there is min 1bp overlap, the equivalent of  
-`bedtools intersect -u -a test.bed -b truth.bed` 
+`bedtools intersect -u -a test.bed -b truth.bed`  
 For deletions using 50% overlap threshold would be more accurate, because events length >> 1bp, i.e.  
 `bedtools intersect -u -r 0.5 -R 0.5 -a test.bed -b truth.bed`  
 Surprisingly, in my test it does not make a big difference, just 15 deletions out of 2668 in GIAB, and it seems that pybedtools does not support parameters -f and -F, so I continued with the default intersect method.
