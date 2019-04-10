@@ -57,7 +57,8 @@ Some SV callers (manta) are sensitive to reads mapped to decoy even with one mat
 	2.1 subset variants:\
 	`bedtools intersect --header -a project-ensemble.vcf.gz -b panel.bed > project.panel.vcf.gz`\
 	2.2 reannotate variants in panels and create gemini.db:\
-	`qsub ~/cre/cre.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project`\
+	`qsub ~/crg/crg.vcf2cre.sh -v original_vcf=project.panel.vcf.gz,project=project`\
+	**note crg.vcf2cre.sh**  not cre.vcf2cre.sh: annotation for WGS are different
 	2.3 build report:\
 	`qsub ~/cre/cre.sh -v family=project,type=wgs`
 3. noncoding variants for gene panels with flank\
